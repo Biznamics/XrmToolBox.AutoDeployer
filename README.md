@@ -1,2 +1,2 @@
-# Innofactor Auto Deployer Tool
+# Auto Deployer Tool in [XrmToolBox](https://www.xrmtoolbox.com)
 
