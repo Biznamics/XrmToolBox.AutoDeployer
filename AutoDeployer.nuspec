@@ -1,30 +1,27 @@
 ﻿<?xml version="1.0"?>
-<package >
-  <metadata>
-    <id>Innofactor.XTB.AutoDeployer</id>
-    <version>1.0.0</version>
-    <title>Auto Deployer Tool for XrmToolBox</title>
-    <authors>Imran Akram, Jonas Rapp, Alexey Shytikov and Innofactor AB</authors>
-    <owners>imranakram, InnofactorSE</owners>
-    <projectUrl>https://github.com/Innofactor/XrmToolBox.AutoDeployer</projectUrl>
-    <icon>icon.png</icon>
-	<iconUrl>https://user-images.githubusercontent.com/13014005/117652881-014c8400-b194-11eb-983e-64a5b3f34d6b.png</iconUrl>
-    <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>
-    Tool to automatically upload plugin assemblies if they are changed during build process.
-	</description>
-    <summary>Tool to automatically upload plugin assemblies if they are changed during build process.</summary>
-    <releaseNotes>
-   
-    </releaseNotes>
-    <copyright>Copyright 2016-2022 Innofactor AB</copyright>
-    <tags>XrmToolBox Plugins Auto Deployer Tool</tags>
-    <dependencies>
-      <dependency id="XrmToolBox" version="1.2021.12.53" />
-    </dependencies>
-  </metadata>
-  <files>
-    <file src="XrmToolBox.AutoDeployer\bin\Release\Innofactor.XTB.AutoDeployer.dll" target="lib\net472\Plugins" />
-    <file src="icon.png" target="" />
-  </files>
+<package>
+	<metadata>
+		<id>Innofactor.XTB.AutoDeployer</id>
+		<version>1.0.0</version>
+		<title>Auto Deployer Tool for XrmToolBox</title>
+		<authors>Imran Akram, Jonas Rapp, Oleksii Shytikov</authors>
+		<owners>imranakram, rappen</owners>
+		<projectUrl>https://github.com/Biznamics/XrmToolBox.AutoDeployer</projectUrl>
+		<icon>icon.png</icon>
+		<iconUrl>https://raw.githubusercontent.com/Biznamics/XrmToolBox.AutoDeployer/refs/heads/master/icon.png</iconUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>Tool to automatically upload plugin assemblies if they are changed during build process.</description>
+		<summary>Tool to automatically upload plugin assemblies if they are changed during build process.</summary>
+		<releaseNotes>
+		</releaseNotes>
+		<copyright>Copyright 2016-2025 Imran, Jonas, Oleksii</copyright>
+		<tags>XrmToolBox Plugins Auto Deployer Tool</tags>
+		<dependencies>
+			<dependency id="XrmToolBox" version="1.2025.7.71" />
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="XrmToolBox.AutoDeployer\bin\Release\Innofactor.XTB.AutoDeployer.dll" target="lib\net472\Plugins" />
+		<file src="icon.png" target="" />
+	</files>
 </package>
