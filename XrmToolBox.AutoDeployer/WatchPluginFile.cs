@@ -22,8 +22,10 @@ namespace XrmToolBox.AutoDeployer
         public string Status { get; private set; }
         public string FullPath { get; private set; }
         public Guid PluginId { get; private set; }
+        public Guid WebResourceId { get; private set; }
         public string Log { get; set; }
         public FileSystemWatcher Watcher { get; }
+        private bool IsWebResource { get; set; }
 
         public event EventHandler Changed;
 
@@ -38,8 +40,16 @@ namespace XrmToolBox.AutoDeployer
             Path = System.IO.Path.GetDirectoryName(filename);
             Status = "Watching";
             Log = $"Started at {DateTime.Now}\r\n";
-            PluginId = GetAssemblyId(Service);
-            if (PluginId != Guid.Empty)
+            IsWebResource = IsWebResourceFile(File);
+            if (IsWebResource)
+            {
+                WebResourceId = GetWebResourceId(Service);
+            }
+            else
+            {
+                PluginId = GetAssemblyId(Service);
+            }
+            if ((IsWebResource && WebResourceId != Guid.Empty) || (!IsWebResource && PluginId != Guid.Empty))
             {
                 Watcher = new FileSystemWatcher();
                 Watcher.Path = Path;
@@ -53,9 +63,15 @@ namespace XrmToolBox.AutoDeployer
             UpdateList();
         }
 
+        private bool IsWebResourceFile(string fileName)
+        {
+            var ext = System.IO.Path.GetExtension(fileName).ToLowerInvariant();
+            return ext == ".js" || ext == ".html" || ext == ".css" || ext == ".xml" || ext == ".png" || ext == ".jpg" || ext == ".gif";
+        }
+
         private void Plugin_Changed(object sender, FileSystemEventArgs e)
         {
-            // Waiting for plugin become fully available for reading
+            // Waiting for plugin/webresource become fully available for reading
             while (true)
             {
                 try
@@ -92,13 +108,20 @@ namespace XrmToolBox.AutoDeployer
                     Log += DateTime.Now.ToString("HH:mm:ss.fff") + $" File updated\r\n";
                     UpdateList();
 
-                    var plugin = new Entity("pluginassembly", PluginId);
-                    plugin["content"] = Convert.ToBase64String(ReadFile(file));
-                    service.Update(plugin);
+                    if (IsWebResource)
+                    {
+                        UpdateWebResource(file);
+                    }
+                    else
+                    {
+                        var plugin = new Entity("pluginassembly", PluginId);
+                        plugin["content"] = Convert.ToBase64String(ReadFile(file));
+                        service.Update(plugin);
+                    }
 
                     PluginUpdated = DateTime.Now;
                     Status = "Update ok";
-                    Log += DateTime.Now.ToString("HH:mm:ss.fff") + $" Dataverse plugin updated\r\n";
+                    Log += DateTime.Now.ToString("HH:mm:ss.fff") + (IsWebResource ? " Dataverse web resource updated\r\n" : " Dataverse plugin updated\r\n");
                     UpdateList();
                 }
             }
@@ -107,6 +130,23 @@ namespace XrmToolBox.AutoDeployer
                 Status = $"Error: {ex.Message}";
                 UpdateList();
             }
+        }
+
+        private void UpdateWebResource(string file)
+        {
+            if (WebResourceId == Guid.Empty) return;
+            var webResource = new Entity("webresource", WebResourceId);
+            webResource["content"] = Convert.ToBase64String(ReadFile(file));
+            service.Update(webResource);
+            PublishWebResource(WebResourceId);
+        }
+
+        private void PublishWebResource(Guid webResourceId)
+        {
+            var request = new OrganizationRequest("PublishXml");
+            var xml = $"<importexportxml><webresources><webresource>{webResourceId.ToString("B").ToUpper().Trim('{','}')}</webresource></webresources></importexportxml>";
+            request["ParameterXml"] = xml;
+            service.Execute(request);
         }
 
         private void UpdateList()
@@ -148,6 +188,20 @@ namespace XrmToolBox.AutoDeployer
             query.Criteria.AddCondition("culture", ConditionOperator.Equal, chunks[2]);
             query.Criteria.AddCondition("publickeytoken", ConditionOperator.Equal, chunks[3]);
             return Service.RetrieveMultiple(query).Entities.FirstOrDefault()?.Id ?? Guid.Empty;
+        }
+
+        private Guid GetWebResourceId(IOrganizationService Service)
+        {
+            if (Service == null)
+            {
+                return Guid.Empty;
+            }
+            var name = File;
+            // Try to find by name (case-insensitive)
+            var query = new QueryExpression("webresource");
+            query.Criteria.AddCondition("name", ConditionOperator.Equal, name);
+            var entity = Service.RetrieveMultiple(query).Entities.FirstOrDefault();
+            return entity?.Id ?? Guid.Empty;
         }
 
         private byte[] ReadFile(string fileName)
