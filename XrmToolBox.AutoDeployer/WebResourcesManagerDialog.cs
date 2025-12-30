@@ -1,17 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace XrmToolBox.AutoDeployer
 {
-    public class WebResourcesManagerDialog : Form
+    public partial class WebResourcesManagerDialog : Form
     {
         public WebResourcesManagerDialog()
         {
-            this.Text = "Web Resources Manager";
-            this.Width = 400;
-            this.Height = 300;
-            this.StartPosition = FormStartPosition.CenterParent;
-            var label = new Label { Text = "Web Resources Manager Placeholder", Dock = DockStyle.Fill, TextAlign = System.Drawing.ContentAlignment.MiddleCenter };
-            this.Controls.Add(label);
+            InitializeComponent();
+            btnClose.Click += (s, e) => Close();
         }
     }
 }
