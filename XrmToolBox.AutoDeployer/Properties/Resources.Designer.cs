@@ -19,7 +19,7 @@ namespace XrmToolBox.AutoDeployer.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -61,21 +61,11 @@ namespace XrmToolBox.AutoDeployer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon ADT {
-            get {
-                object obj = ResourceManager.GetObject("ADT", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ADT32x32 {
+        internal static System.Drawing.Bitmap ADT_256 {
             get {
-                object obj = ResourceManager.GetObject("ADT32x32", resourceCulture);
+                object obj = ResourceManager.GetObject("ADT_256", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -83,9 +73,19 @@ namespace XrmToolBox.AutoDeployer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ADT80x80 {
+        internal static System.Drawing.Bitmap ADT_32 {
             get {
-                object obj = ResourceManager.GetObject("ADT80x80", resourceCulture);
+                object obj = ResourceManager.GetObject("ADT_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ADT_withText_256 {
+            get {
+                object obj = ResourceManager.GetObject("ADT_withText_256", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

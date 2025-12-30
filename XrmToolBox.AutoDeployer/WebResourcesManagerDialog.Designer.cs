@@ -297,6 +297,7 @@ namespace XrmToolBox.AutoDeployer
             this.btnSave.Size = new System.Drawing.Size(90, 30);
             this.btnSave.TabIndex = 2;
             this.btnSave.Text = "Save";
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
             // btnRemoveSelected
             // 
@@ -315,6 +316,7 @@ namespace XrmToolBox.AutoDeployer
             this.btnClose.Size = new System.Drawing.Size(90, 30);
             this.btnClose.TabIndex = 4;
             this.btnClose.Text = "Close";
+            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
             // 
             // WebResourcesManagerDialog
             // 

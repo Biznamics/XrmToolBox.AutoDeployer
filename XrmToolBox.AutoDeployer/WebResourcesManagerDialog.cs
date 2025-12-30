@@ -8,35 +8,33 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using McTools.Xrm.Connection;
+using McTools.Xrm.Connection.WinForms.AppCode;
 using XrmToolBox.Extensibility;
 
 namespace XrmToolBox.AutoDeployer
 {
     public partial class WebResourcesManagerDialog : Form
     {
-        private const string SettingsKey = "WebResourceWatchConfig";
         private WebResourceWatchConfig config;
+        
 
-        public WebResourcesManagerDialog()
+        public WebResourcesManagerDialog(WebResourceWatchConfig initial)
         {
             InitializeComponent();
-            btnClose.Click += (s, e) => Close();
-            this.Load += WebResourcesManagerDialog_Load;
-            btnSave.Click += BtnSave_Click;
-        }
-
-        private void WebResourcesManagerDialog_Load(object sender, EventArgs e)
-        {
-            LoadSettings();
+            config = initial ?? new WebResourceWatchConfig { PublishEnabled = true, DebounceMs = 1500 };
             PopulateFieldsFromConfig();
         }
 
-        private void BtnSave_Click(object sender, EventArgs e)
+
+        private void btnSave_Click(object sender, EventArgs e)
         {
             SaveFieldsToConfig();
-            SaveSettings();
-            this.DialogResult = DialogResult.OK;
+            DialogResult = DialogResult.OK;
+            Close();
         }
+
+
 
         private void PopulateFieldsFromConfig()
         {
@@ -59,8 +57,8 @@ namespace XrmToolBox.AutoDeployer
         private void SaveFieldsToConfig()
         {
             if (config == null) config = new WebResourceWatchConfig();
-            config.RootPath = txtRootFolder.Text;
-            config.Prefix = txtPrefix.Text;
+            config.RootPath = (txtRootFolder.Text ?? "").Trim();
+            config.Prefix = (txtPrefix.Text ?? "").Trim();
             config.Patterns = txtPatterns.Text;
             config.PublishEnabled = chkPublishAfterUpdate.Checked;
             config.DebounceMs = (int)numDebounce.Value;
@@ -70,23 +68,15 @@ namespace XrmToolBox.AutoDeployer
                 if (row.IsNewRow) continue;
                 config.Mappings.Add(new WebResourceMapping
                 {
-                    IsActive = row.Cells[0].Value is bool b && b,
-                    RelativePath = row.Cells[1].Value?.ToString() ?? string.Empty,
-                    CrmName = row.Cells[2].Value?.ToString() ?? string.Empty
+                    IsActive = Convert.ToBoolean(row.Cells["Watch"].Value ?? false),
+                    RelativePath = row.Cells["RelativePath"].Value?.ToString() ?? "",
+                    CrmName = row.Cells["CrmName"].Value?.ToString() ?? ""
+
                 });
             }
         }
 
-        private void LoadSettings()
-        {
-            var loaded = SettingsManager.Instance.GetUserSetting<WebResourceWatchConfig>(SettingsKey);
-            config = loaded ?? new WebResourceWatchConfig { PublishEnabled = true, DebounceMs = 1500 };
-        }
-
-        private void SaveSettings()
-        {
-            SettingsManager.Instance.SetUserSetting(SettingsKey, config);
-        }
+     
 
         private void btnBrowseRoot_Click(object sender, EventArgs e)
         {
@@ -198,14 +188,26 @@ namespace XrmToolBox.AutoDeployer
 
         private DataGridViewRow FindRowByRelativePath(string relativePath)
         {
+            if (string.IsNullOrWhiteSpace(relativePath))
+                return null;
+
+            var key = relativePath.Trim();
+
+            if (!dgvResources.Columns.Contains("RelativePath"))
+                return null; 
+
             foreach (DataGridViewRow row in dgvResources.Rows)
             {
+                if (row.IsNewRow) continue;
+
                 var val = row.Cells["RelativePath"].Value?.ToString();
-                if (string.Equals(val, relativePath, StringComparison.OrdinalIgnoreCase))
+                if (val != null && string.Equals(val.Trim(), key, StringComparison.OrdinalIgnoreCase))
                     return row;
             }
+
             return null;
         }
+
 
         private static string GetRelativePath(string root, string fullPath)
         {
@@ -233,6 +235,13 @@ namespace XrmToolBox.AutoDeployer
                     dgvResources.Rows.Remove(row);
             }
         }
+
+        private void btnClose_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        public WebResourceWatchConfig Config => config;
 
     }
 }

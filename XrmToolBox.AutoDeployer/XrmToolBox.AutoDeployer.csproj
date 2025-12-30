@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>XrmToolBox.AutoDeployer</RootNamespace>
-    <AssemblyName>Innofactor.XTB.AutoDeployer</AssemblyName>
+    <AssemblyName>Biznamics.XTB.AutoDeployer</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -95,6 +95,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WatchWebResourceFile.cs" />
     <Compile Include="WatchPluginFile.cs" />
     <Compile Include="WebResourcesManagerDialog.cs">
       <SubType>Form</SubType>
@@ -124,17 +125,12 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\icon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\ADT.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="ADT.ico" />
+    <Content Include="Resources\ADT_256.png" />
+    <Content Include="Resources\ADT_32.png" />
+    <Content Include="Resources\ADT_withText_256.png" />
     <None Include="Resources\delete2.png" />
     <None Include="Resources\navigate_plus.png" />
-    <None Include="Resources\ADT32x32.png" />
-    <None Include="Resources\ADT80x80.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CrmSdk.Workflow">
