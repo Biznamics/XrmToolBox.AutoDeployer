@@ -102,6 +102,7 @@
     <Compile Include="WebResourcesManagerDialog.Designer.cs">
       <DependentUpon>WebResourcesManagerDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="WebResourceWatchConfig.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="About.resx">
@@ -114,6 +115,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="WebResourcesManagerDialog.resx">
+      <DependentUpon>WebResourcesManagerDialog.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
