@@ -30,7 +30,9 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainControl));
             this.tsMenu = new System.Windows.Forms.ToolStrip();
-            this.bAddPlugin = new System.Windows.Forms.ToolStripButton();
+            this.bAdd = new System.Windows.Forms.ToolStripSplitButton();
+            this.bAddPluginMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bAddWebResourceMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bDelPlugin = new System.Windows.Forms.ToolStripButton();
             this.ofdPlugin = new System.Windows.Forms.OpenFileDialog();
             this.listWatching = new System.Windows.Forms.ListView();
@@ -52,7 +54,7 @@
             // 
             this.tsMenu.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.tsMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.bAddPlugin,
+            this.bAdd,
             this.bDelPlugin});
             this.tsMenu.Location = new System.Drawing.Point(0, 0);
             this.tsMenu.Name = "tsMenu";
@@ -60,14 +62,33 @@
             this.tsMenu.TabIndex = 0;
             this.tsMenu.Text = "toolStrip1";
             // 
-            // bAddPlugin
+            // bAdd
             // 
-            this.bAddPlugin.Image = global::XrmToolBox.AutoDeployer.Properties.Resources.navigate_plus;
-            this.bAddPlugin.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.bAddPlugin.Name = "bAddPlugin";
-            this.bAddPlugin.Size = new System.Drawing.Size(145, 28);
-            this.bAddPlugin.Text = "Add Plugin to Watch";
-            this.bAddPlugin.Click += new System.EventHandler(this.bAddPlugin_Click);
+            this.bAdd.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.bAddPluginMenuItem,
+            this.bAddWebResourceMenuItem});
+            this.bAdd.Image = global::XrmToolBox.AutoDeployer.Properties.Resources.navigate_plus;
+            this.bAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.bAdd.Name = "bAdd";
+            this.bAdd.Size = new System.Drawing.Size(69, 28);
+            this.bAdd.Text = "Add";
+            this.bAdd.ToolTipText = "Add plugin assembly or web resource. Web Resource require extra info for their CR" +
+    "M prefix, root path and so on...";
+            this.bAdd.ButtonClick += new System.EventHandler(this.bAdd_ButtonClick);
+            // 
+            // bAddPluginMenuItem
+            // 
+            this.bAddPluginMenuItem.Name = "bAddPluginMenuItem";
+            this.bAddPluginMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.bAddPluginMenuItem.Text = "Plugin Assembly";
+            this.bAddPluginMenuItem.Click += new System.EventHandler(this.bAddPluginMenuItem_Click);
+            // 
+            // bAddWebResourceMenuItem
+            // 
+            this.bAddWebResourceMenuItem.Name = "bAddWebResourceMenuItem";
+            this.bAddWebResourceMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.bAddWebResourceMenuItem.Text = "Web Resources";
+            this.bAddWebResourceMenuItem.Click += new System.EventHandler(this.bAddWebResourceMenuItem_Click);
             // 
             // bDelPlugin
             // 
@@ -184,13 +205,15 @@
         private System.Windows.Forms.ToolStrip tsMenu;
         private System.Windows.Forms.OpenFileDialog ofdPlugin;
         private System.Windows.Forms.ListView listWatching;
-        private System.Windows.Forms.ToolStripButton bAddPlugin;
+        private System.Windows.Forms.ToolStripSplitButton bAdd;
+        private System.Windows.Forms.ToolStripMenuItem bAddPluginMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bAddWebResourceMenuItem;
+        private System.Windows.Forms.ToolStripButton bDelPlugin;
         private System.Windows.Forms.ColumnHeader file;
         private System.Windows.Forms.ColumnHeader folder;
         private System.Windows.Forms.ColumnHeader fileupdated;
         private System.Windows.Forms.ColumnHeader pluginupdated;
         private System.Windows.Forms.ColumnHeader status;
-        private System.Windows.Forms.ToolStripButton bDelPlugin;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TextBox txtLog;
     }

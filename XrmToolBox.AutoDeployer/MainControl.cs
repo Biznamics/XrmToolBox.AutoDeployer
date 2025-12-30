@@ -57,7 +57,25 @@
 
         #region Private Methods
 
-        private void bAddPlugin_Click(object sender, EventArgs e)
+        private void bAdd_ButtonClick(object sender, EventArgs e)
+        {
+            AddPluginAssembly();
+        }
+
+        private void bAddPluginMenuItem_Click(object sender, EventArgs e)
+        {
+            AddPluginAssembly();
+        }
+
+        private void bAddWebResourceMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var dialog = new WebResourcesManagerDialog())
+            {
+                dialog.ShowDialog(this);
+            }
+        }
+
+        private void AddPluginAssembly()
         {
             if (ofdPlugin.ShowDialog() == DialogResult.OK)
             {
