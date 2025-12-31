@@ -30,10 +30,10 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainControl));
             this.tsMenu = new System.Windows.Forms.ToolStrip();
-            this.bAdd = new System.Windows.Forms.ToolStripSplitButton();
+            this.bAdd = new System.Windows.Forms.ToolStripDropDownButton();
             this.bAddPluginMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bAddWebResourceMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.bDelPlugin = new System.Windows.Forms.ToolStripButton();
+            this.bDelSelected = new System.Windows.Forms.ToolStripButton();
             this.ofdPlugin = new System.Windows.Forms.OpenFileDialog();
             this.listWatching = new System.Windows.Forms.ListView();
             this.file = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -55,7 +55,7 @@
             this.tsMenu.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.tsMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.bAdd,
-            this.bDelPlugin});
+            this.bDelSelected});
             this.tsMenu.Location = new System.Drawing.Point(0, 0);
             this.tsMenu.Name = "tsMenu";
             this.tsMenu.Size = new System.Drawing.Size(1061, 31);
@@ -70,35 +70,34 @@
             this.bAdd.Image = global::XrmToolBox.AutoDeployer.Properties.Resources.navigate_plus;
             this.bAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.bAdd.Name = "bAdd";
-            this.bAdd.Size = new System.Drawing.Size(69, 28);
+            this.bAdd.Size = new System.Drawing.Size(66, 28);
             this.bAdd.Text = "Add";
             this.bAdd.ToolTipText = "Add plugin assembly or web resource. Web Resource require extra info for their CR" +
     "M prefix, root path and so on...";
-            this.bAdd.ButtonClick += new System.EventHandler(this.bAdd_ButtonClick);
             // 
             // bAddPluginMenuItem
             // 
             this.bAddPluginMenuItem.Name = "bAddPluginMenuItem";
-            this.bAddPluginMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.bAddPluginMenuItem.Size = new System.Drawing.Size(162, 22);
             this.bAddPluginMenuItem.Text = "Plugin Assembly";
             this.bAddPluginMenuItem.Click += new System.EventHandler(this.bAddPluginMenuItem_Click);
             // 
             // bAddWebResourceMenuItem
             // 
             this.bAddWebResourceMenuItem.Name = "bAddWebResourceMenuItem";
-            this.bAddWebResourceMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.bAddWebResourceMenuItem.Size = new System.Drawing.Size(162, 22);
             this.bAddWebResourceMenuItem.Text = "Web Resources";
             this.bAddWebResourceMenuItem.Click += new System.EventHandler(this.bAddWebResourceMenuItem_Click);
             // 
-            // bDelPlugin
+            // bDelSelected
             // 
-            this.bDelPlugin.Enabled = false;
-            this.bDelPlugin.Image = global::XrmToolBox.AutoDeployer.Properties.Resources.delete2;
-            this.bDelPlugin.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.bDelPlugin.Name = "bDelPlugin";
-            this.bDelPlugin.Size = new System.Drawing.Size(137, 28);
-            this.bDelPlugin.Text = "Remove this Plugin";
-            this.bDelPlugin.Click += new System.EventHandler(this.bDelPlugin_Click);
+            this.bDelSelected.Enabled = false;
+            this.bDelSelected.Image = global::XrmToolBox.AutoDeployer.Properties.Resources.delete2;
+            this.bDelSelected.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.bDelSelected.Name = "bDelSelected";
+            this.bDelSelected.Size = new System.Drawing.Size(124, 28);
+            this.bDelSelected.Text = "Remove selected";
+            this.bDelSelected.Click += new System.EventHandler(this.bDelSelected_Click);
             // 
             // ofdPlugin
             // 
@@ -205,10 +204,10 @@
         private System.Windows.Forms.ToolStrip tsMenu;
         private System.Windows.Forms.OpenFileDialog ofdPlugin;
         private System.Windows.Forms.ListView listWatching;
-        private System.Windows.Forms.ToolStripSplitButton bAdd;
+        private System.Windows.Forms.ToolStripDropDownButton bAdd;
         private System.Windows.Forms.ToolStripMenuItem bAddPluginMenuItem;
         private System.Windows.Forms.ToolStripMenuItem bAddWebResourceMenuItem;
-        private System.Windows.Forms.ToolStripButton bDelPlugin;
+        private System.Windows.Forms.ToolStripButton bDelSelected;
         private System.Windows.Forms.ColumnHeader file;
         private System.Windows.Forms.ColumnHeader folder;
         private System.Windows.Forms.ColumnHeader fileupdated;

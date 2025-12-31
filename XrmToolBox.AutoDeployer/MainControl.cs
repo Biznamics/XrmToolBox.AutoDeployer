@@ -55,11 +55,6 @@
 
         #region Private Methods
 
-        private void bAdd_ButtonClick(object sender, EventArgs e)
-        {
-            AddPluginAssembly();
-        }
-
         private void bAddPluginMenuItem_Click(object sender, EventArgs e)
         {
             AddPluginAssembly();
@@ -99,7 +94,7 @@
                 {
                     listWatching.Items[0].Selected = true;
                 }
-                bDelPlugin.Enabled = true;
+                bDelSelected.Enabled = true;
             }
         }
 
@@ -125,7 +120,7 @@
 
         #endregion Private Methods
 
-        private void bDelPlugin_Click(object sender, EventArgs e)
+        private void bDelSelected_Click(object sender, EventArgs e)
         {
             // Remove from highest index to lowest so indices don't shift
             for (int i = listWatching.SelectedIndices.Count - 1; i >= 0; i--)
@@ -142,7 +137,7 @@
                 listWatching.Items.RemoveAt(idx);
             }
 
-            bDelPlugin.Enabled = listWatching.SelectedItems.Count > 0;
+            bDelSelected.Enabled = listWatching.SelectedItems.Count > 0;
             txtLog.Text = string.Empty;
         }
 
@@ -152,7 +147,7 @@
         private void listWatching_SelectedIndexChanged(object sender, EventArgs e)
         {
             Plugin_Changed(sender, e);
-            bDelPlugin.Enabled = listWatching.SelectedItems.Count > 0;
+            bDelSelected.Enabled = listWatching.SelectedItems.Count > 0;
         }
 
         private string GetWebResourceSettingsKey()
@@ -199,7 +194,7 @@
                 listWatching.Items.Add(watcher.ListItem);
             }
 
-            bDelPlugin.Enabled = listWatching.Items.Count > 0;
+            bDelSelected.Enabled = listWatching.Items.Count > 0;
         }
         private void ClearWebResourceWatchers()
         {
@@ -251,9 +246,6 @@
             SettingsManager.Instance.Save(GetType(), cfg, name);
         }
 
-
-
-
-
+     
     }
 }
