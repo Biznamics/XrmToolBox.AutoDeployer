@@ -43,6 +43,7 @@
             this.status = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.txtLog = new System.Windows.Forms.TextBox();
+            this.tsWrSummary = new System.Windows.Forms.ToolStripLabel();
             this.tsMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -55,7 +56,8 @@
             this.tsMenu.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.tsMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.bAdd,
-            this.bDelSelected});
+            this.bDelSelected,
+            this.tsWrSummary});
             this.tsMenu.Location = new System.Drawing.Point(0, 0);
             this.tsMenu.Name = "tsMenu";
             this.tsMenu.Size = new System.Drawing.Size(1061, 31);
@@ -97,6 +99,7 @@
             this.bDelSelected.Name = "bDelSelected";
             this.bDelSelected.Size = new System.Drawing.Size(124, 28);
             this.bDelSelected.Text = "Remove selected";
+            this.bDelSelected.ToolTipText = "Remove selected plugin or web resource";
             this.bDelSelected.Click += new System.EventHandler(this.bDelSelected_Click);
             // 
             // ofdPlugin
@@ -140,7 +143,7 @@
             // 
             // pluginupdated
             // 
-            this.pluginupdated.Text = "Plugin Updated";
+            this.pluginupdated.Text = "Updated";
             this.pluginupdated.Width = 115;
             // 
             // status
@@ -176,6 +179,11 @@
             this.txtLog.ReadOnly = true;
             this.txtLog.Size = new System.Drawing.Size(1061, 130);
             this.txtLog.TabIndex = 0;
+            // 
+            // tsWrSummary
+            // 
+            this.tsWrSummary.Name = "tsWrSummary";
+            this.tsWrSummary.Size = new System.Drawing.Size(0, 28);
             // 
             // MainControl
             // 
@@ -215,5 +223,6 @@
         private System.Windows.Forms.ColumnHeader status;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TextBox txtLog;
+        private System.Windows.Forms.ToolStripLabel tsWrSummary;
     }
 }

@@ -2,6 +2,7 @@
 {
     using System;
     using System.IO;
+    using System.Linq;
     using System.Windows.Forms;
     using XrmToolBox.Extensibility;
     using XrmToolBox.Extensibility.Interfaces;
@@ -139,21 +140,14 @@
 
             bDelSelected.Enabled = listWatching.SelectedItems.Count > 0;
             txtLog.Text = string.Empty;
+            UpdateWrSummary();
         }
-
-
-
 
         private void listWatching_SelectedIndexChanged(object sender, EventArgs e)
         {
             Plugin_Changed(sender, e);
             bDelSelected.Enabled = listWatching.SelectedItems.Count > 0;
-        }
-
-        private string GetWebResourceSettingsKey()
-        {
-            var id = ConnectionDetail?.ConnectionId ?? Guid.Empty;
-            return $"WebResourceWatchConfig.{id:D}";
+            UpdateWrSummary();
         }
 
         private void RefreshWebResourceWatchers()
@@ -195,6 +189,7 @@
             }
 
             bDelSelected.Enabled = listWatching.Items.Count > 0;
+            UpdateWrSummary();
         }
         private void ClearWebResourceWatchers()
         {
@@ -208,6 +203,7 @@
                 }
             }
             _webResourceWatchers.Clear();
+            UpdateWrSummary();
         }
 
         public override void UpdateConnection(Microsoft.Xrm.Sdk.IOrganizationService newService, McTools.Xrm.Connection.ConnectionDetail detail, string actionName,
@@ -245,7 +241,23 @@
             var name = GetWebResourceSettingsName();
             SettingsManager.Instance.Save(GetType(), cfg, name);
         }
+        private void UpdateWrSummary()
+        {
+            var cfg = LoadWebResourceConfig();
+            if (cfg == null || string.IsNullOrWhiteSpace(cfg.RootPath))
+            {
+                tsWrSummary.Text = "Web resources: not configured";
+                return;
+            }
 
+            var total = cfg.Mappings?.Count ?? 0;
+            var active = cfg.Mappings?.Count(m => m.IsActive) ?? 0;
+
+            tsWrSummary.Text =
+                $"Web resources: {active} active (of {total}) — Root: {cfg.RootPath} — Prefix: {cfg.Prefix} — " +
+                $"Publish: {(cfg.PublishEnabled ? "On" : "Off")} — Debounce: {cfg.DebounceMs}ms";
+        }
      
+
     }
 }

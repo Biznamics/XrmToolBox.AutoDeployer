@@ -243,5 +243,101 @@ namespace XrmToolBox.AutoDeployer
 
         public WebResourceWatchConfig Config => config;
 
+        private void btnValidate_Click(object sender, EventArgs e)
+        {
+            if (!ValidateInputs(out var rootPath, out var prefix, out var patterns))
+                return;
+
+            // Clear status columns
+            foreach (DataGridViewRow row in dgvResources.Rows)
+            {
+                if (!row.IsNewRow)
+                {
+                    row.Cells["ExistsInCrm"].Value = "";
+                    row.Cells["Status"].Value = "";
+                }
+            }
+
+            var errors = new List<string>();
+            var relSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var crmSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (DataGridViewRow row in dgvResources.Rows)
+            {
+                if (row.IsNewRow) continue;
+
+                var rel = (row.Cells["RelativePath"].Value?.ToString() ?? "").Trim();
+                var crm = (row.Cells["CrmName"].Value?.ToString() ?? "").Trim();
+
+                if (string.IsNullOrWhiteSpace(rel))
+                {
+                    row.Cells["Status"].Value = "Missing RelativePath";
+                    errors.Add("One or more rows are missing RelativePath.");
+                    continue;
+                }
+
+                // Ensure CRM name default is correct
+                var expectedCrm = BuildCrmName(prefix, rel);
+                if (string.IsNullOrWhiteSpace(crm))
+                {
+                    crm = expectedCrm;
+                    row.Cells["CrmName"].Value = crm;
+                }
+                else if (!string.Equals(crm, expectedCrm, StringComparison.OrdinalIgnoreCase))
+                {
+                    row.Cells["Status"].Value = $"CrmName differs (expected {expectedCrm})";
+                }
+
+                // Duplicate checks
+                if (!relSet.Add(rel))
+                {
+                    row.Cells["Status"].Value = "Duplicate RelativePath";
+                    errors.Add($"Duplicate RelativePath: {rel}");
+                }
+                if (!crmSet.Add(crm))
+                {
+                    row.Cells["Status"].Value = "Duplicate CrmName";
+                    errors.Add($"Duplicate CrmName: {crm}");
+                }
+
+                // File exists check
+                var fullPath = Path.Combine(rootPath, rel);
+                if (!File.Exists(fullPath))
+                {
+                    row.Cells["Status"].Value = "File not found under Root folder";
+                    errors.Add($"File missing: {fullPath}");
+                }
+                else
+                {
+                    // If no prior warning set, mark OK
+                    var status = row.Cells["Status"].Value?.ToString();
+                    if (string.IsNullOrWhiteSpace(status))
+                        row.Cells["Status"].Value = "OK";
+                }
+            }
+
+            if (errors.Count > 0)
+            {
+                // show a short summary
+                MessageBox.Show(
+                    this,
+                    $"Validation completed with {errors.Count} issue(s).\r\n\r\n" +
+                    string.Join("\r\n", errors.Take(10)) +
+                    (errors.Count > 10 ? "\r\n..." : ""),
+                    "AutoDeployer - Validate",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+            else
+            {
+                MessageBox.Show(this, "Validation OK.", "AutoDeployer - Validate",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+
+
+
+
     }
 }

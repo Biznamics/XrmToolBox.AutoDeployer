@@ -5,23 +5,23 @@
 		<version>1.0.0</version>
 		<title>Auto Deployer Tool for XrmToolBox</title>
 		<authors>Imran Akram, Jonas Rapp, Oleksii Shytikov</authors>
-		<owners>imranakram, rappen</owners>
+		<owners>imranakram</owners>
 		<projectUrl>https://github.com/Biznamics/XrmToolBox.AutoDeployer</projectUrl>
 		<icon>icon.png</icon>
 		<iconUrl>https://raw.githubusercontent.com/Biznamics/XrmToolBox.AutoDeployer/refs/heads/master/icon.png</iconUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<description>Tool to automatically upload plugin assemblies if they are changed during build process.</description>
-		<summary>Tool to automatically upload plugin assemblies if they are changed during build process.</summary>
+		<description>Tool to automatically upload plugin assemblies and web resources if they are changed during build process.</description>
+		<summary>Tool to automatically upload plugin assemblies and web resources if they are changed during build process.</summary>
 		<releaseNotes>
 		</releaseNotes>
-		<copyright>Copyright 2016-2025 Imran, Jonas, Oleksii</copyright>
+		<copyright>Copyright 2016-2026 Imran, Jonas, Oleksii</copyright>
 		<tags>XrmToolBox Plugins Auto Deployer Tool</tags>
 		<dependencies>
 			<dependency id="XrmToolBox" version="1.2025.7.71" />
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="XrmToolBox.AutoDeployer\bin\Release\Innofactor.XTB.AutoDeployer.dll" target="lib\net472\Plugins" />
+		<file src="XrmToolBox.AutoDeployer\bin\Release\Biznamics.XTB.AutoDeployer.dll" target="lib\net48\Plugins" />
 		<file src="icon.png" target="" />
 	</files>
 </package>

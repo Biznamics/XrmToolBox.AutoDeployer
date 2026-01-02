@@ -125,10 +125,11 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ADT.ico" />
     <Content Include="Resources\ADT_256.png" />
     <Content Include="Resources\ADT_32.png" />
     <Content Include="Resources\ADT_withText_256.png" />
+    <Content Include="ADT.ico" />
+    <Content Include="Resources\AutoDeployerTool_128.png" />
     <None Include="Resources\delete2.png" />
     <None Include="Resources\navigate_plus.png" />
   </ItemGroup>

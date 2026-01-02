@@ -52,6 +52,7 @@ namespace XrmToolBox.AutoDeployer
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(WebResourcesManagerDialog));
             this.topPanel = new System.Windows.Forms.Panel();
             this.lblRootFolder = new System.Windows.Forms.Label();
             this.txtRootFolder = new System.Windows.Forms.TextBox();
@@ -289,6 +290,7 @@ namespace XrmToolBox.AutoDeployer
             this.btnValidate.Size = new System.Drawing.Size(90, 30);
             this.btnValidate.TabIndex = 1;
             this.btnValidate.Text = "Validate";
+            this.btnValidate.Click += new System.EventHandler(this.btnValidate_Click);
             // 
             // btnSave
             // 
@@ -326,6 +328,7 @@ namespace XrmToolBox.AutoDeployer
             this.Controls.Add(this.dgvResources);
             this.Controls.Add(this.topPanel);
             this.Controls.Add(this.bottomPanel);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(700, 400);
             this.Name = "WebResourcesManagerDialog";
             this.Text = "Web Resources Manager";
