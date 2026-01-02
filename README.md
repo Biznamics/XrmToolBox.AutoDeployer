@@ -163,4 +163,4 @@ If you contribute:
 
 ## License
 
-Add your preferred license here (MIT / Apache-2.0 / etc.).
+MIT
