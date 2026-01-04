@@ -144,7 +144,7 @@ namespace XrmToolBox.AutoDeployer
         private void PublishWebResource(Guid webResourceId)
         {
             var request = new OrganizationRequest("PublishXml");
-            var xml = $"<importexportxml><webresources><webresource>{webResourceId.ToString("B").ToUpper().Trim('{','}')}</webresource></webresources></importexportxml>";
+            var xml = $"<importexportxml><webresources><webresource>{webResourceId.ToString("D").ToUpperInvariant()}</webresource></webresources></importexportxml>";
             request["ParameterXml"] = xml;
             service.Execute(request);
         }
