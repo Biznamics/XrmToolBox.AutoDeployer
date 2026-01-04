@@ -1,20 +1,26 @@
 ﻿<?xml version="1.0"?>
 <package>
 	<metadata>
-		<id>Innofactor.XTB.AutoDeployer</id>
+		<id>Biznamics.XTB.AutoDeployer</id>
 		<version>1.0.0</version>
 		<title>Auto Deployer Tool for XrmToolBox</title>
-		<authors>Imran Akram, Jonas Rapp, Oleksii Shytikov</authors>
-		<owners>imranakram</owners>
+		<authors>Imran Akram, Jonas Rapp, Alexey Shytikov</authors>
+		<owners>imranakram, Biznamics</owners>
 		<projectUrl>https://github.com/Biznamics/XrmToolBox.AutoDeployer</projectUrl>
 		<icon>icon.png</icon>
-		<iconUrl>https://raw.githubusercontent.com/Biznamics/XrmToolBox.AutoDeployer/refs/heads/master/icon.png</iconUrl>
+		<readme>docs\README.md</readme>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>Tool to automatically upload plugin assemblies and web resources if they are changed during build process.</description>
 		<summary>Tool to automatically upload plugin assemblies and web resources if they are changed during build process.</summary>
 		<releaseNotes>
+			- Added Web Resources auto-deploy: watch local files and upload/update Dataverse Web Resources on change.
+			- New "Web Resources Manager" to configure root folder, prefix, scan patterns, and per-file mappings (enable/disable watch).
+			- Debounce support to avoid multiple uploads during rapid saves.
+			- Optional publish after update (configurable).
+			- Configuration is persisted per environment/connection.
+			- UI improvements: Add menu now supports both Plugin Assembly and Web Resources; watcher list supports both types; Remove selected works for both.
 		</releaseNotes>
-		<copyright>Copyright 2016-2026 Imran, Jonas, Oleksii</copyright>
+		<copyright>Copyright 2016-2026 Imran, Jonas, Alexey</copyright>
 		<tags>XrmToolBox Plugins Auto Deployer Tool</tags>
 		<dependencies>
 			<dependency id="XrmToolBox" version="1.2025.7.71" />
@@ -23,5 +29,6 @@
 	<files>
 		<file src="XrmToolBox.AutoDeployer\bin\Release\Biznamics.XTB.AutoDeployer.dll" target="lib\net48\Plugins" />
 		<file src="icon.png" target="" />
+		<file src="README.md" target="docs\" />
 	</files>
 </package>
