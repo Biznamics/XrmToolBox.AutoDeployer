@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>XrmToolBox.AutoDeployer</RootNamespace>
-    <AssemblyName>Biznamics.XTB.AutoDeployer</AssemblyName>
+    <AssemblyName>Innofactor.XTB.AutoDeployer</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />

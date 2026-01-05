@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0"?>
 <package>
 	<metadata>
-		<id>Biznamics.XTB.AutoDeployer</id>
+		<id>Innofactor.XTB.AutoDeployer</id>
 		<version>1.0.0</version>
 		<title>Auto Deployer Tool for XrmToolBox</title>
 		<authors>Imran Akram, Jonas Rapp, Alexey Shytikov</authors>
-		<owners>imranakram, Biznamics</owners>
+		<owners>imranakram, rappen, biznamics</owners>
 		<projectUrl>https://github.com/Biznamics/XrmToolBox.AutoDeployer</projectUrl>
 		<icon>icon.png</icon>
 		<readme>docs\README.md</readme>
@@ -27,7 +27,7 @@
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="XrmToolBox.AutoDeployer\bin\Release\Biznamics.XTB.AutoDeployer.dll" target="lib\net48\Plugins" />
+		<file src="XrmToolBox.AutoDeployer\bin\Release\Innofactor.XTB.AutoDeployer.dll" target="lib\net48\Plugins" />
 		<file src="icon.png" target="" />
 		<file src="README.md" target="docs\" />
 	</files>

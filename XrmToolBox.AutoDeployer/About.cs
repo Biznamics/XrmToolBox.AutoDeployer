@@ -53,14 +53,17 @@
 
         private void linkLabelAlexey_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://twitter.com/shytikov");
+            System.Diagnostics.Process.Start("https://x.com/shytikov");
         }
 
         private void linkLabelImran_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://twitter.com/imranakram365");
+            System.Diagnostics.Process.Start("https://x.com/imranakram365");
         }
-
+        private void linkRappen_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://x.com/rappen");
+        }
         private void PopulateAssemblies()
         {
             try
@@ -77,5 +80,7 @@
         }
 
         #endregion Private Methods
+
+       
     }
 }

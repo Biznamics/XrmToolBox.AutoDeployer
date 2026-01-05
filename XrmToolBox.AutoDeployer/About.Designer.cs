@@ -44,6 +44,8 @@ namespace XrmToolBox.AutoDeployer
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.linkRappen = new System.Windows.Forms.LinkLabel();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -60,7 +62,7 @@ namespace XrmToolBox.AutoDeployer
             // linkLabelImran
             // 
             this.linkLabelImran.AutoSize = true;
-            this.linkLabelImran.Location = new System.Drawing.Point(81, 323);
+            this.linkLabelImran.Location = new System.Drawing.Point(103, 323);
             this.linkLabelImran.Name = "linkLabelImran";
             this.linkLabelImran.Size = new System.Drawing.Size(90, 13);
             this.linkLabelImran.TabIndex = 54;
@@ -190,11 +192,33 @@ namespace XrmToolBox.AutoDeployer
             this.pictureBox1.TabIndex = 46;
             this.pictureBox1.TabStop = false;
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(17, 369);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(64, 13);
+            this.label2.TabIndex = 56;
+            this.label2.Text = "Jonas Rapp";
+            // 
+            // linkRappen
+            // 
+            this.linkRappen.AutoSize = true;
+            this.linkRappen.Location = new System.Drawing.Point(103, 369);
+            this.linkRappen.Name = "linkRappen";
+            this.linkRappen.Size = new System.Drawing.Size(51, 13);
+            this.linkRappen.TabIndex = 57;
+            this.linkRappen.TabStop = true;
+            this.linkRappen.Text = "@rappen";
+            this.linkRappen.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkRappen_LinkClicked);
+            // 
             // About
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(597, 442);
+            this.Controls.Add(this.linkRappen);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.linkLabelImran);
             this.Controls.Add(this.label3);
@@ -232,5 +256,7 @@ namespace XrmToolBox.AutoDeployer
         private System.Windows.Forms.ListView listAssemblies;
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.ColumnHeader columnHeader2;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.LinkLabel linkRappen;
     }
 }
