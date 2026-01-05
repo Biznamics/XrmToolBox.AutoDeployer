@@ -145,6 +145,7 @@ namespace XrmToolBox.AutoDeployer
             this.txtPrefix.Name = "txtPrefix";
             this.txtPrefix.Size = new System.Drawing.Size(200, 20);
             this.txtPrefix.TabIndex = 0;
+            this.txtPrefix.TextChanged += new System.EventHandler(this.txtPrefix_TextChanged);
             // 
             // lblPatterns
             // 
@@ -232,6 +233,7 @@ namespace XrmToolBox.AutoDeployer
             this.dgvResources.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvResources.Size = new System.Drawing.Size(900, 430);
             this.dgvResources.TabIndex = 0;
+            this.dgvResources.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvResources_CellValueChanged);
             // 
             // Watch
             // 

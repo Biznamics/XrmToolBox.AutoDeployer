@@ -80,7 +80,9 @@
       <DependentUpon>About.cs</DependentUpon>
     </Compile>
     <Compile Include="Constants.cs" />
+    <Compile Include="DataverseFileUpload.cs" />
     <Compile Include="Destination.cs" />
+    <Compile Include="PluginPackageWatchConfig.cs" />
     <Compile Include="Resource.cs" />
     <Compile Include="MainControl.cs">
       <SubType>UserControl</SubType>
@@ -95,6 +97,10 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SelectItemDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WatchPluginPackageFile.cs" />
     <Compile Include="WatchWebResourceFile.cs" />
     <Compile Include="WatchPluginFile.cs" />
     <Compile Include="WebResourcesManagerDialog.cs">
@@ -129,7 +135,10 @@
     <Content Include="Resources\ADT_32.png" />
     <Content Include="Resources\ADT_withText_256.png" />
     <Content Include="ADT.ico" />
+    <Content Include="Resources\assembly.png" />
     <Content Include="Resources\AutoDeployerTool_128.png" />
+    <Content Include="Resources\PluginPackage.png" />
+    <Content Include="Resources\WebResource.png" />
     <None Include="Resources\delete2.png" />
     <None Include="Resources\navigate_plus.png" />
   </ItemGroup>

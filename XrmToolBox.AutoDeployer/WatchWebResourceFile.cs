@@ -5,15 +5,19 @@ using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
+using XrmToolBox.Extensibility;
 
 namespace XrmToolBox.AutoDeployer
 {
-    internal class WatchWebResourceFile : IDisposable
+    internal sealed class WatchWebResourceFile : IDisposable
     {
         private readonly Control owner;
         private readonly IOrganizationService service;
         private readonly WebResourceWatchConfig config;
         private readonly WebResourceMapping mapping;
+        private readonly PluginControlBase host;
+
+        private int isUpdating; // 0 = no, 1 = yes
 
         private System.Threading.Timer publishTimer;
         private readonly object publishLock = new object();
@@ -21,6 +25,9 @@ namespace XrmToolBox.AutoDeployer
         public ListViewItem ListItem { get; }
         public string Log { get; private set; } = "";
         public string Status { get; private set; } = "Watching";
+
+        public string RelativePath => mapping?.RelativePath;
+        public string CrmName => mapping?.CrmName;
 
         public DateTime FileUpdated { get; private set; }
         public DateTime PublishedUpdated { get; private set; }
@@ -31,10 +38,10 @@ namespace XrmToolBox.AutoDeployer
 
         public Guid WebResourceId { get; private set; }
 
-        public FileSystemWatcher Watcher { get; }
+        public FileSystemWatcher Watcher { get; private set; }
 
         public event EventHandler Changed;
-        protected virtual void OnChanged() => Changed?.Invoke(this, EventArgs.Empty);
+        private void OnChanged() => Changed?.Invoke(this, EventArgs.Empty);
 
         public WatchWebResourceFile(WebResourceWatchConfig cfg, WebResourceMapping map, IOrganizationService svc, Control uiOwner)
         {
@@ -43,10 +50,9 @@ namespace XrmToolBox.AutoDeployer
             service = svc ?? throw new ArgumentNullException(nameof(svc));
             owner = uiOwner ?? throw new ArgumentNullException(nameof(uiOwner));
 
-            // Build absolute file path
-            FullPath = Path.Combine(config.RootPath ?? "", mapping.RelativePath ?? "");
-            FullPath = Path.GetFullPath(FullPath);
+            host = owner as PluginControlBase;
 
+            FullPath = Path.GetFullPath(Path.Combine(config.RootPath ?? "", mapping.RelativePath ?? ""));
             FileName = Path.GetFileName(FullPath);
             FolderPath = Path.GetDirectoryName(FullPath);
 
@@ -54,14 +60,13 @@ namespace XrmToolBox.AutoDeployer
             Log += $"CRM: {mapping.CrmName}\r\n";
             Log += $"File: {FullPath}\r\n";
 
-            WebResourceId = GetWebResourceIdByName(mapping.CrmName);
+            ListItem = new ListViewItem { Tag = this };
 
-            ListItem = new ListViewItem();
-            ListItem.Tag = this;
+            WebResourceId = GetWebResourceIdByName(mapping.CrmName);
 
             if (WebResourceId == Guid.Empty)
             {
-                Status = "Not found in CRM";
+                Status = "Not found in Dataverse";
                 Log += $"{DateTime.Now:HH:mm:ss.fff} ERROR: WebResource not found by name '{mapping.CrmName}'\r\n";
                 UpdateList();
                 return;
@@ -79,7 +84,7 @@ namespace XrmToolBox.AutoDeployer
             {
                 Path = FolderPath,
                 Filter = FileName,
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName,
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName,
                 IncludeSubdirectories = false,
                 EnableRaisingEvents = true
             };
@@ -92,7 +97,6 @@ namespace XrmToolBox.AutoDeployer
 
         private void OnFileRenamed(object sender, RenamedEventArgs e)
         {
-            // If renamed away, we can mark inactive
             Status = "Renamed (not watching)";
             Log += $"{DateTime.Now:HH:mm:ss.fff} File renamed: {e.OldName} -> {e.Name}\r\n";
             UpdateList();
@@ -100,43 +104,62 @@ namespace XrmToolBox.AutoDeployer
 
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
-            if (!string.Equals(e.FullPath, FullPath, StringComparison.OrdinalIgnoreCase))
+            // prevent overlapping uploads
+            if (Interlocked.Exchange(ref isUpdating, 1) == 1)
                 return;
 
-            // Wait until file is readable (same as your plugin watcher pattern)
-            WaitUntilReadable(e.FullPath);
-
-            try
+            // Always hop to UI thread before calling WorkAsync
+            owner.BeginInvoke((Action)(() =>
             {
-                var lastWriteTime = File.GetLastWriteTime(e.FullPath);
-                if (lastWriteTime == FileUpdated)
+                if (host == null)
+                {
+                    Interlocked.Exchange(ref isUpdating, 0);
                     return;
+                }
 
-                FileUpdated = lastWriteTime;
+                host.WorkAsync(new WorkAsyncInfo
+                {
+                    Message = $"Auto Deployer: Updating web resource '{mapping.CrmName}'...",
+                    Work = (w, we) =>
+                    {
+                        // background thread
+                        WaitForFileReady(FullPath);
 
-                Status = "Updating...";
-                Log += $"{DateTime.Now:HH:mm:ss.fff} File updated\r\n";
-                UpdateList();
+                        var content = Convert.ToBase64String(ReadFile(FullPath));
+                        var wr = new Entity("webresource", WebResourceId);
+                        wr["content"] = content;
+                        service.Update(wr);
+                    },
+                    PostWorkCallBack = (we) =>
+                    {
+                        try
+                        {
+                            if (we.Error != null)
+                            {
+                                Status = $"Update error: {we.Error.Message}";
+                                Log += $"{DateTime.Now:HH:mm:ss.fff} ERROR: {we.Error}\r\n";
+                                host.SetWorkingMessage(Status);
+                            }
+                            else
+                            {
+                                FileUpdated = File.GetLastWriteTime(FullPath);
+                                Status = "Updated";
+                                Log += $"{DateTime.Now:HH:mm:ss.fff} Updated in Dataverse\r\n";
+                                host.SetWorkingMessage($"Web resource updated: {mapping.CrmName}");
 
-                // Update content
-                var webResource = new Entity("webresource", WebResourceId);
-                webResource["content"] = Convert.ToBase64String(ReadFile(e.FullPath));
-                service.Update(webResource);
+                                if (config.PublishEnabled)
+                                    QueuePublish();
+                            }
 
-                Log += $"{DateTime.Now:HH:mm:ss.fff} Dataverse webresource updated\r\n";
-                Status = config.PublishEnabled ? "Queued publish..." : "Update ok";
-                UpdateList();
-
-                // Publish with debounce
-                if (config.PublishEnabled)
-                    QueuePublish();
-            }
-            catch (Exception ex)
-            {
-                Status = $"Error: {ex.Message}";
-                Log += $"{DateTime.Now:HH:mm:ss.fff} ERROR: {ex}\r\n";
-                UpdateList();
-            }
+                            UpdateList();
+                        }
+                        finally
+                        {
+                            Interlocked.Exchange(ref isUpdating, 0);
+                        }
+                    }
+                });
+            }));
         }
 
         private void QueuePublish()
@@ -148,15 +171,41 @@ namespace XrmToolBox.AutoDeployer
                 {
                     try
                     {
-                        Status = "Publishing...";
-                        UpdateList();
+                        if (owner.IsDisposed || !owner.IsHandleCreated)
+                            return;
 
-                        PublishWebResource(WebResourceId);
+                        owner.BeginInvoke((Action)(() =>
+                        {
+                            if (host == null)
+                                return;
 
-                        PublishedUpdated = DateTime.Now;
-                        Status = "Published";
-                        Log += $"{DateTime.Now:HH:mm:ss.fff} Published\r\n";
-                        UpdateList();
+                            host.WorkAsync(new WorkAsyncInfo
+                            {
+                                Message = $"Auto Deployer: Publishing web resource '{mapping.CrmName}'...",
+                                Work = (w, we) =>
+                                {
+                                    PublishWebResource(WebResourceId);
+                                },
+                                PostWorkCallBack = (we) =>
+                                {
+                                    if (we.Error != null)
+                                    {
+                                        Status = $"Publish error: {we.Error.Message}";
+                                        Log += $"{DateTime.Now:HH:mm:ss.fff} PUBLISH ERROR: {we.Error}\r\n";
+                                        host.SetWorkingMessage(Status);
+                                    }
+                                    else
+                                    {
+                                        PublishedUpdated = DateTime.Now;
+                                        Status = "Published";
+                                        Log += $"{DateTime.Now:HH:mm:ss.fff} Published\r\n";
+                                        host.SetWorkingMessage($"Web resource published: {mapping.CrmName}");
+                                    }
+
+                                    UpdateList();
+                                }
+                            });
+                        }));
                     }
                     catch (Exception ex)
                     {
@@ -164,13 +213,15 @@ namespace XrmToolBox.AutoDeployer
                         Log += $"{DateTime.Now:HH:mm:ss.fff} PUBLISH ERROR: {ex}\r\n";
                         UpdateList();
                     }
+
                 }, null, config.DebounceMs > 0 ? config.DebounceMs : 1500, Timeout.Infinite);
+
             }
         }
 
+
         private void PublishWebResource(Guid webResourceId)
         {
-            // Use GUID without braces
             var id = webResourceId.ToString("D").ToUpperInvariant();
 
             var request = new OrganizationRequest("PublishXml");
@@ -194,22 +245,26 @@ namespace XrmToolBox.AutoDeployer
             return service.RetrieveMultiple(query).Entities.FirstOrDefault()?.Id ?? Guid.Empty;
         }
 
-        private static void WaitUntilReadable(string filePath)
+        private static void WaitForFileReady(string fullPath)
         {
-            while (true)
+            // called from WorkAsync background thread
+            const int maxAttempts = 40; // ~10s
+            for (int i = 0; i < maxAttempts; i++)
             {
                 try
                 {
-                    using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    {
-                        if (stream.Length >= 0)
-                            break;
-                    }
+                    using (File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                        return;
                 }
-                catch (IOException) { }
+                catch (FileNotFoundException) { }
                 catch (UnauthorizedAccessException) { }
+                catch (IOException) { }
+
                 Thread.Sleep(250);
             }
+
+            // final attempt to throw meaningful exception
+            using (File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) { }
         }
 
         private static byte[] ReadFile(string fileName)
@@ -229,8 +284,8 @@ namespace XrmToolBox.AutoDeployer
                 while (ListItem.SubItems.Count < 5)
                     ListItem.SubItems.Add(string.Empty);
 
-                // Reuse same columns as WatchPluginFile: File, Path, FileUpdated, PluginUpdated, Status
-                ListItem.Text = FileName;
+                // Column 0: show CRM name (more useful than file name)
+                ListItem.Text = mapping?.CrmName ?? FileName;
                 ListItem.SubItems[1].Text = FolderPath;
                 ListItem.SubItems[2].Text = FileUpdated.Ticks != 0 ? FileUpdated.ToString("HH:mm:ss.fff") : "";
                 ListItem.SubItems[3].Text = PublishedUpdated.Ticks != 0 ? PublishedUpdated.ToString("HH:mm:ss.fff") : "";
@@ -253,9 +308,10 @@ namespace XrmToolBox.AutoDeployer
                     Watcher.Changed -= OnFileChanged;
                     Watcher.Renamed -= OnFileRenamed;
                     Watcher.Dispose();
+                    Watcher = null;
                 }
             }
-            catch { /* ignore */ }
+            catch { }
 
             lock (publishLock)
             {

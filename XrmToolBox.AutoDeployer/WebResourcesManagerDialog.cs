@@ -17,13 +17,65 @@ namespace XrmToolBox.AutoDeployer
     public partial class WebResourcesManagerDialog : Form
     {
         private WebResourceWatchConfig config;
-        
 
-        public WebResourcesManagerDialog(WebResourceWatchConfig initial)
+
+        private readonly Microsoft.Xrm.Sdk.IOrganizationService _service;
+
+        public WebResourcesManagerDialog(WebResourceWatchConfig initial, Microsoft.Xrm.Sdk.IOrganizationService service)
         {
             InitializeComponent();
+            dgvResources.Columns["RelativePath"].ReadOnly = true;
+            dgvResources.Columns["CrmName"].ReadOnly = true;
+            dgvResources.Columns["ExistsInCrm"].ReadOnly = true;
+            dgvResources.Columns["Status"].ReadOnly = true;
+
+            // allow only the checkbox
+            dgvResources.Columns["Watch"].ReadOnly = false;
+
+            _service = service; // can be null
             config = initial ?? new WebResourceWatchConfig { PublishEnabled = true, DebounceMs = 1500 };
             PopulateFieldsFromConfig();
+        }
+
+        private void RebuildCrmNamesFromPrefix(string prefix)
+        {
+            foreach (DataGridViewRow row in dgvResources.Rows)
+            {
+                if (row.IsNewRow) continue;
+
+                var rel = (row.Cells["RelativePath"].Value?.ToString() ?? "").Trim();
+                if (string.IsNullOrWhiteSpace(rel)) continue;
+
+                row.Cells["CrmName"].Value = BuildCrmName(prefix, rel);
+            }
+        }
+        private HashSet<string> GetExistingWebResourceNames(IEnumerable<string> names)
+        {
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var list = names.Where(n => !string.IsNullOrWhiteSpace(n)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            if (list.Count == 0) return set;
+
+            const int chunkSize = 200; // safe
+            for (int i = 0; i < list.Count; i += chunkSize)
+            {
+                var chunk = list.Skip(i).Take(chunkSize).ToArray();
+
+                var qe = new Microsoft.Xrm.Sdk.Query.QueryExpression("webresource")
+                {
+                    ColumnSet = new Microsoft.Xrm.Sdk.Query.ColumnSet("name")
+                };
+                qe.Criteria.AddCondition("name", Microsoft.Xrm.Sdk.Query.ConditionOperator.In, chunk.Cast<object>().ToArray());
+
+                var res = _service.RetrieveMultiple(qe);
+                foreach (var e in res.Entities)
+                {
+                    var name = e.GetAttributeValue<string>("name");
+                    if (!string.IsNullOrWhiteSpace(name))
+                        set.Add(name);
+                }
+            }
+
+            return set;
         }
 
 
@@ -66,13 +118,14 @@ namespace XrmToolBox.AutoDeployer
             foreach (DataGridViewRow row in dgvResources.Rows)
             {
                 if (row.IsNewRow) continue;
+                var rel = (row.Cells["RelativePath"].Value?.ToString() ?? "").Trim();
                 config.Mappings.Add(new WebResourceMapping
                 {
                     IsActive = Convert.ToBoolean(row.Cells["Watch"].Value ?? false),
-                    RelativePath = row.Cells["RelativePath"].Value?.ToString() ?? "",
-                    CrmName = row.Cells["CrmName"].Value?.ToString() ?? ""
-
+                    RelativePath = rel,
+                    CrmName = BuildCrmName(config.Prefix, rel) // recompute, don’t trust grid
                 });
+
             }
         }
 
@@ -160,7 +213,7 @@ namespace XrmToolBox.AutoDeployer
         {
             if (!ValidateInputs(out var rootPath, out var prefix, out var patterns))
                 return;
-
+            RebuildCrmNamesFromPrefix(prefix);
             var allFiles = Directory.GetFiles(rootPath, "*.*", SearchOption.AllDirectories);
 
             int added = 0;
@@ -174,11 +227,16 @@ namespace XrmToolBox.AutoDeployer
 
                 matched++;
 
+                var crmName = BuildCrmName(prefix, rel);
+
                 var existingRow = FindRowByRelativePath(rel);
                 if (existingRow != null)
+                {
+                    // Prefix may have changed since row was added => rewrite CrmName
+                    existingRow.Cells["CrmName"].Value = crmName;
                     continue;
+                }
 
-                var crmName = BuildCrmName(prefix, rel);
                 dgvResources.Rows.Add(false, rel, crmName, "", "");
                 added++;
             }
@@ -243,24 +301,31 @@ namespace XrmToolBox.AutoDeployer
 
         public WebResourceWatchConfig Config => config;
 
-        private void btnValidate_Click(object sender, EventArgs e)
+        private async void btnValidate_Click(object sender, EventArgs e)
         {
             if (!ValidateInputs(out var rootPath, out var prefix, out var patterns))
                 return;
 
+            // Always rebuild names (prevents "stuck with mistake")
+            RebuildCrmNamesFromPrefix(prefix);
+
             // Clear status columns
             foreach (DataGridViewRow row in dgvResources.Rows)
             {
-                if (!row.IsNewRow)
-                {
-                    row.Cells["ExistsInCrm"].Value = "";
-                    row.Cells["Status"].Value = "";
-                }
+                if (row.IsNewRow) continue;
+                row.Cells["ExistsInCrm"].Value = "";
+                row.Cells["Status"].Value = "";
+                
+                ResetCellStyle(row.Cells["ExistsInCrm"]);
+                ResetCellStyle(row.Cells["Status"]);
             }
 
             var errors = new List<string>();
             var relSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var crmSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            // local validation first + collect crm names
+            var crmNames = new List<string>();
 
             foreach (DataGridViewRow row in dgvResources.Rows)
             {
@@ -268,76 +333,214 @@ namespace XrmToolBox.AutoDeployer
 
                 var rel = (row.Cells["RelativePath"].Value?.ToString() ?? "").Trim();
                 var crm = (row.Cells["CrmName"].Value?.ToString() ?? "").Trim();
+                if (string.IsNullOrWhiteSpace(crm))
+                {
+                    row.Cells["Status"].Value = "Missing CrmName";
+                    errors.Add($"Missing CrmName for: {rel}");
+                    ApplyValidationCellStyles(row);
+                    continue;
+                }
 
                 if (string.IsNullOrWhiteSpace(rel))
                 {
                     row.Cells["Status"].Value = "Missing RelativePath";
                     errors.Add("One or more rows are missing RelativePath.");
+                    ApplyValidationCellStyles(row);
                     continue;
                 }
 
-                // Ensure CRM name default is correct
-                var expectedCrm = BuildCrmName(prefix, rel);
-                if (string.IsNullOrWhiteSpace(crm))
-                {
-                    crm = expectedCrm;
-                    row.Cells["CrmName"].Value = crm;
-                }
-                else if (!string.Equals(crm, expectedCrm, StringComparison.OrdinalIgnoreCase))
-                {
-                    row.Cells["Status"].Value = $"CrmName differs (expected {expectedCrm})";
-                }
-
-                // Duplicate checks
                 if (!relSet.Add(rel))
                 {
                     row.Cells["Status"].Value = "Duplicate RelativePath";
                     errors.Add($"Duplicate RelativePath: {rel}");
+                    ApplyValidationCellStyles(row);
                 }
+
                 if (!crmSet.Add(crm))
                 {
                     row.Cells["Status"].Value = "Duplicate CrmName";
                     errors.Add($"Duplicate CrmName: {crm}");
+                    ApplyValidationCellStyles(row);
                 }
 
-                // File exists check
                 var fullPath = Path.Combine(rootPath, rel);
                 if (!File.Exists(fullPath))
                 {
                     row.Cells["Status"].Value = "File not found under Root folder";
                     errors.Add($"File missing: {fullPath}");
                 }
-                else
+                ApplyValidationCellStyles(row);
+
+                crmNames.Add(crm);
+            }
+
+            // Dataverse validation (only if we have a service)
+            HashSet<string> existing = null;
+
+            if (_service != null)
+            {
+                btnValidate.Enabled = false;
+                Cursor = Cursors.WaitCursor;
+
+                try
                 {
-                    // If no prior warning set, mark OK
-                    var status = row.Cells["Status"].Value?.ToString();
-                    if (string.IsNullOrWhiteSpace(status))
-                        row.Cells["Status"].Value = "OK";
+                    existing = await Task.Run(() => GetExistingWebResourceNames(crmNames));
                 }
+                finally
+                {
+                    Cursor = Cursors.Default;
+                    btnValidate.Enabled = true;
+                }
+            }
+
+            // apply CRM results + final status
+            foreach (DataGridViewRow row in dgvResources.Rows)
+            {
+                if (row.IsNewRow) continue;
+
+                var crm = (row.Cells["CrmName"].Value?.ToString() ?? "").Trim();
+                var currentStatus = row.Cells["Status"].Value?.ToString();
+
+                if (_service == null)
+                {
+                    // local-only fallback if no connection
+                    if (string.IsNullOrWhiteSpace(currentStatus))
+                        row.Cells["Status"].Value = "OK (local only)";
+                    ApplyValidationCellStyles(row);
+                    continue;
+                }
+
+                var exists = existing != null && existing.Contains(crm);
+                row.Cells["ExistsInCrm"].Value = exists ? "Yes" : "No";
+
+                if (!exists && string.IsNullOrWhiteSpace(currentStatus))
+                    row.Cells["Status"].Value = "Not found in Dataverse";
+                else if (exists && string.IsNullOrWhiteSpace(currentStatus))
+                    row.Cells["Status"].Value = "OK";
+                ApplyValidationCellStyles(row);
             }
 
             if (errors.Count > 0)
             {
-                // show a short summary
-                MessageBox.Show(
-                    this,
-                    $"Validation completed with {errors.Count} issue(s).\r\n\r\n" +
-                    string.Join("\r\n", errors.Take(10)) +
-                    (errors.Count > 10 ? "\r\n..." : ""),
+                MessageBox.Show(this,
+                    $"Validation completed with {errors.Count} local issue(s).\r\n\r\n" +
+                    string.Join("\r\n", errors.Take(10)) + (errors.Count > 10 ? "\r\n..." : ""),
                     "AutoDeployer - Validate",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             else
             {
-                MessageBox.Show(this, "Validation OK.", "AutoDeployer - Validate",
+                MessageBox.Show(this, "Validation completed.", "AutoDeployer - Validate",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
 
+        private void RecalculateCrmNames(string prefix, bool updateStatus = false)
+        {
+            prefix = (prefix ?? string.Empty).Trim();
+
+            foreach (DataGridViewRow row in dgvResources.Rows)
+            {
+                if (row.IsNewRow) continue;
+
+                var rel = (row.Cells["RelativePath"].Value?.ToString() ?? "").Trim();
+                if (string.IsNullOrWhiteSpace(rel)) continue;
+
+                var expected = BuildCrmName(prefix, rel);
+                var current = (row.Cells["CrmName"].Value?.ToString() ?? "").Trim();
+
+                if (!string.Equals(current, expected, StringComparison.OrdinalIgnoreCase))
+                {
+                    row.Cells["CrmName"].Value = expected;
+
+                    if (updateStatus)
+                    {
+                        // only set Status if it isn't already an error you want to keep
+                        var status = (row.Cells["Status"].Value?.ToString() ?? "").Trim();
+                        if (string.IsNullOrWhiteSpace(status) || status.StartsWith("CrmName", StringComparison.OrdinalIgnoreCase) || status == "OK")
+                            row.Cells["Status"].Value = "CrmName updated from Prefix";
+                    }
+                }
+            }
+        }
+
+        private void txtPrefix_TextChanged(object sender, EventArgs e)
+        {
+            var prefix = (txtPrefix.Text ?? "").Trim();
+            if (!string.IsNullOrWhiteSpace(prefix))
+                RecalculateCrmNames(prefix, updateStatus: false);
+        }
+        private void ApplyValidationCellStyles(DataGridViewRow row)
+        {
+            if (row == null || row.IsNewRow) return;
+
+            var existsCell = row.Cells["ExistsInCrm"];
+            var statusCell = row.Cells["Status"];
+
+            // Reset first (so old red/yellow goes away when things become OK)
+            ResetCellStyle(existsCell);
+            ResetCellStyle(statusCell);
+
+            var exists = (existsCell.Value?.ToString() ?? "").Trim();   // "Yes"/"No"/""
+            var status = (statusCell.Value?.ToString() ?? "").Trim();
+
+            bool localError =
+                status.StartsWith("Missing", StringComparison.OrdinalIgnoreCase) ||
+                status.StartsWith("Duplicate", StringComparison.OrdinalIgnoreCase) ||
+                status.IndexOf("File not found", StringComparison.OrdinalIgnoreCase) >= 0;
+
+            bool notInDataverse =
+                exists.Equals("No", StringComparison.OrdinalIgnoreCase) ||
+                status.IndexOf("Not found in Dataverse", StringComparison.OrdinalIgnoreCase) >= 0;
+
+            if (localError)
+            {
+                // Strong red for local errors
+                MarkCellError(statusCell);
+                return;
+            }
+
+            if (notInDataverse)
+            {
+                // Softer warning for Dataverse missing
+                //MarkCellWarning(existsCell);
+                //MarkCellWarning(statusCell);
+                MarkCellError(existsCell);
+                return;
+            }
+
+            // OK => keep defaults
+        }
+
+        private void ResetCellStyle(DataGridViewCell cell)
+        {
+            if (cell == null) return;
+            cell.Style.BackColor = dgvResources.DefaultCellStyle.BackColor;
+            cell.Style.ForeColor = dgvResources.DefaultCellStyle.ForeColor;
+            cell.Style.Font = dgvResources.DefaultCellStyle.Font;
+        }
+
+        private void MarkCellError(DataGridViewCell cell)
+        {
+            if (cell == null) return;
+            cell.Style.BackColor = System.Drawing.Color.MistyRose;
+            cell.Style.ForeColor = System.Drawing.Color.DarkRed;
+            cell.Style.Font = new System.Drawing.Font(dgvResources.Font, System.Drawing.FontStyle.Bold);
+        }
+
+        private void MarkCellWarning(DataGridViewCell cell)
+        {
+            if (cell == null) return;
+            cell.Style.BackColor = System.Drawing.Color.LemonChiffon;
+            cell.Style.ForeColor = System.Drawing.Color.SaddleBrown;
+        }
 
 
-
+        private void dgvResources_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            ApplyValidationCellStyles(dgvResources.Rows[e.RowIndex]);
+        }
     }
 }

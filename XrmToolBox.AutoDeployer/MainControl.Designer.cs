@@ -33,7 +33,9 @@
             this.bAdd = new System.Windows.Forms.ToolStripDropDownButton();
             this.bAddPluginMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bAddWebResourceMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pluginPackageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bDelSelected = new System.Windows.Forms.ToolStripButton();
+            this.tsWrSummary = new System.Windows.Forms.ToolStripLabel();
             this.ofdPlugin = new System.Windows.Forms.OpenFileDialog();
             this.listWatching = new System.Windows.Forms.ListView();
             this.file = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -43,7 +45,6 @@
             this.status = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.txtLog = new System.Windows.Forms.TextBox();
-            this.tsWrSummary = new System.Windows.Forms.ToolStripLabel();
             this.tsMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -68,7 +69,8 @@
             // 
             this.bAdd.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.bAddPluginMenuItem,
-            this.bAddWebResourceMenuItem});
+            this.bAddWebResourceMenuItem,
+            this.pluginPackageToolStripMenuItem});
             this.bAdd.Image = global::XrmToolBox.AutoDeployer.Properties.Resources.navigate_plus;
             this.bAdd.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.bAdd.Name = "bAdd";
@@ -79,17 +81,27 @@
             // 
             // bAddPluginMenuItem
             // 
+            this.bAddPluginMenuItem.Image = global::XrmToolBox.AutoDeployer.Properties.Resources.assembly;
             this.bAddPluginMenuItem.Name = "bAddPluginMenuItem";
-            this.bAddPluginMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.bAddPluginMenuItem.Size = new System.Drawing.Size(188, 30);
             this.bAddPluginMenuItem.Text = "Plugin Assembly";
             this.bAddPluginMenuItem.Click += new System.EventHandler(this.bAddPluginMenuItem_Click);
             // 
             // bAddWebResourceMenuItem
             // 
+            this.bAddWebResourceMenuItem.Image = global::XrmToolBox.AutoDeployer.Properties.Resources.webresource;
             this.bAddWebResourceMenuItem.Name = "bAddWebResourceMenuItem";
-            this.bAddWebResourceMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.bAddWebResourceMenuItem.Size = new System.Drawing.Size(188, 30);
             this.bAddWebResourceMenuItem.Text = "Web Resources";
             this.bAddWebResourceMenuItem.Click += new System.EventHandler(this.bAddWebResourceMenuItem_Click);
+            // 
+            // pluginPackageToolStripMenuItem
+            // 
+            this.pluginPackageToolStripMenuItem.Image = global::XrmToolBox.AutoDeployer.Properties.Resources.pluginpackage;
+            this.pluginPackageToolStripMenuItem.Name = "pluginPackageToolStripMenuItem";
+            this.pluginPackageToolStripMenuItem.Size = new System.Drawing.Size(188, 30);
+            this.pluginPackageToolStripMenuItem.Text = "Plugin Package";
+            this.pluginPackageToolStripMenuItem.Click += new System.EventHandler(this.pluginPackageToolStripMenuItem_Click);
             // 
             // bDelSelected
             // 
@@ -101,6 +113,11 @@
             this.bDelSelected.Text = "Remove selected";
             this.bDelSelected.ToolTipText = "Remove selected plugin or web resource";
             this.bDelSelected.Click += new System.EventHandler(this.bDelSelected_Click);
+            // 
+            // tsWrSummary
+            // 
+            this.tsWrSummary.Name = "tsWrSummary";
+            this.tsWrSummary.Size = new System.Drawing.Size(0, 28);
             // 
             // ofdPlugin
             // 
@@ -128,8 +145,8 @@
             // 
             // file
             // 
-            this.file.Text = "Plugin";
-            this.file.Width = 141;
+            this.file.Text = "Artifact";
+            this.file.Width = 250;
             // 
             // folder
             // 
@@ -139,7 +156,7 @@
             // fileupdated
             // 
             this.fileupdated.Text = "File Updated";
-            this.fileupdated.Width = 124;
+            this.fileupdated.Width = 110;
             // 
             // pluginupdated
             // 
@@ -180,11 +197,6 @@
             this.txtLog.Size = new System.Drawing.Size(1061, 130);
             this.txtLog.TabIndex = 0;
             // 
-            // tsWrSummary
-            // 
-            this.tsWrSummary.Name = "tsWrSummary";
-            this.tsWrSummary.Size = new System.Drawing.Size(0, 28);
-            // 
             // MainControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -224,5 +236,6 @@
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TextBox txtLog;
         private System.Windows.Forms.ToolStripLabel tsWrSummary;
+        private System.Windows.Forms.ToolStripMenuItem pluginPackageToolStripMenuItem;
     }
 }
