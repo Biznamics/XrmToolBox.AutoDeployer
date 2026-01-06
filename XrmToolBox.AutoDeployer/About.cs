@@ -60,10 +60,12 @@
         {
             System.Diagnostics.Process.Start("https://x.com/imranakram365");
         }
+
         private void linkRappen_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             System.Diagnostics.Process.Start("https://x.com/rappen");
         }
+
         private void PopulateAssemblies()
         {
             try
@@ -80,7 +82,5 @@
         }
 
         #endregion Private Methods
-
-       
     }
 }

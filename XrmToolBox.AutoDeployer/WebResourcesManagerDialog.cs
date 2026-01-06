@@ -13,8 +13,14 @@ namespace XrmToolBox.AutoDeployer
 {
     public partial class WebResourcesManagerDialog : Form
     {
-        private WebResourceWatchConfig config;
+        #region Private Fields
+
         private readonly IOrganizationService _service;
+        private WebResourceWatchConfig config;
+
+        #endregion Private Fields
+
+        #region Public Constructors
 
         public WebResourcesManagerDialog(WebResourceWatchConfig initial, IOrganizationService service)
         {
@@ -32,143 +38,34 @@ namespace XrmToolBox.AutoDeployer
             PopulateFieldsFromConfig();
         }
 
-        private void RebuildCrmNamesFromPrefix(string prefix)
+        #endregion Public Constructors
+
+        #region Public Properties
+
+        public WebResourceWatchConfig Config => config;
+
+        #endregion Public Properties
+
+        #region Private Methods
+
+        private static string BuildCrmName(string prefix, string relativePath)
         {
-            foreach (DataGridViewRow row in dgvResources.Rows)
-            {
-                if (row.IsNewRow) continue;
-
-                var rel = (row.Cells["RelativePath"].Value?.ToString() ?? "").Trim();
-                if (string.IsNullOrWhiteSpace(rel)) continue;
-
-                row.Cells["CrmName"].Value = BuildCrmName(prefix, rel);
-            }
-        }
-        private HashSet<string> GetExistingWebResourceNames(IEnumerable<string> names)
-        {
-            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var list = names.Where(n => !string.IsNullOrWhiteSpace(n)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-            if (list.Count == 0) return set;
-
-            const int chunkSize = 200; // safe
-            for (int i = 0; i < list.Count; i += chunkSize)
-            {
-                var chunk = list.Skip(i).Take(chunkSize).ToArray();
-
-                var qe = new QueryExpression("webresource")
-                {
-                    ColumnSet = new ColumnSet("name")
-                };
-                qe.Criteria.AddCondition("name", ConditionOperator.In, chunk.Cast<object>().ToArray());
-
-                var res = _service.RetrieveMultiple(qe);
-                foreach (var e in res.Entities)
-                {
-                    var name = e.GetAttributeValue<string>("name");
-                    if (!string.IsNullOrWhiteSpace(name))
-                        set.Add(name);
-                }
-            }
-
-            return set;
+            prefix = prefix.Trim().TrimEnd('/', '\\');
+            var rel = relativePath.Replace('\\', '/').TrimStart('/');
+            return $"{prefix}/{rel}";
         }
 
-
-        private void btnSave_Click(object sender, EventArgs e)
+        private static string GetRelativePath(string root, string fullPath)
         {
-            SaveFieldsToConfig();
-            DialogResult = DialogResult.OK;
-            Close();
+            var rootNorm = Path.GetFullPath(root.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar);
+            var fullNorm = Path.GetFullPath(fullPath);
+
+            if (!fullNorm.StartsWith(rootNorm, StringComparison.OrdinalIgnoreCase))
+                return Path.GetFileName(fullNorm);
+
+            return fullNorm.Substring(rootNorm.Length);
         }
 
-
-
-        private void PopulateFieldsFromConfig()
-        {
-            if (config == null) config = new WebResourceWatchConfig();
-            txtRootFolder.Text = config.RootPath ?? string.Empty;
-            txtPrefix.Text = config.Prefix ?? string.Empty;
-            txtPatterns.Text = config.Patterns ?? string.Empty;
-            chkPublishAfterUpdate.Checked = config.PublishEnabled;
-            numDebounce.Value = config.DebounceMs > 0 ? config.DebounceMs : 1500;
-            dgvResources.Rows.Clear();
-            if (config.Mappings != null)
-            {
-                foreach (var m in config.Mappings)
-                {
-                    dgvResources.Rows.Add(m.IsActive, m.RelativePath, m.CrmName, string.Empty, string.Empty);
-                }
-            }
-        }
-
-        private void SaveFieldsToConfig()
-        {
-            if (config == null) config = new WebResourceWatchConfig();
-            config.RootPath = (txtRootFolder.Text ?? "").Trim();
-            config.Prefix = (txtPrefix.Text ?? "").Trim();
-            config.Patterns = txtPatterns.Text;
-            config.PublishEnabled = chkPublishAfterUpdate.Checked;
-            config.DebounceMs = (int)numDebounce.Value;
-            config.Mappings = new List<WebResourceMapping>();
-            foreach (DataGridViewRow row in dgvResources.Rows)
-            {
-                if (row.IsNewRow) continue;
-                var rel = (row.Cells["RelativePath"].Value?.ToString() ?? "").Trim();
-                config.Mappings.Add(new WebResourceMapping
-                {
-                    IsActive = Convert.ToBoolean(row.Cells["Watch"].Value ?? false),
-                    RelativePath = rel,
-                    CrmName = BuildCrmName(config.Prefix, rel) // recompute, don’t trust grid
-                });
-
-            }
-        }
-
-     
-
-        private void btnBrowseRoot_Click(object sender, EventArgs e)
-        {
-            using (var dlg = new FolderBrowserDialog())
-            {
-                dlg.Description = "Select the root folder that contains the built webresource files";
-                if (Directory.Exists(txtRootFolder.Text))
-                    dlg.SelectedPath = txtRootFolder.Text;
-
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                    txtRootFolder.Text = dlg.SelectedPath;
-            }
-        }
-        private bool ValidateInputs(out string rootPath, out string prefix, out string[] patterns)
-        {
-            rootPath = (txtRootFolder.Text ?? string.Empty).Trim();
-            prefix = (txtPrefix.Text ?? string.Empty).Trim();
-
-            patterns = (txtPatterns.Text ?? string.Empty)
-                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(p => p.Trim())
-                .Where(p => !string.IsNullOrWhiteSpace(p))
-                .ToArray();
-
-            if (string.IsNullOrWhiteSpace(rootPath) || !Directory.Exists(rootPath))
-            {
-                MessageBox.Show(this, "Please select a valid Root folder.", "AutoDeployer", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(prefix))
-            {
-                MessageBox.Show(this, "Please enter a Prefix (e.g. cint_mua).", "AutoDeployer", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return false;
-            }
-
-            if (patterns.Length == 0)
-            {
-                MessageBox.Show(this, "Please add at least one pattern (e.g. scripts\\*.js).", "AutoDeployer", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return false;
-            }
-
-            return true;
-        }
         private static bool WildcardMatch(string input, string pattern)
         {
             // Very small glob: * and ? only, case-insensitive
@@ -202,6 +99,91 @@ namespace XrmToolBox.AutoDeployer
 
             while (p < pattern.Length && pattern[p] == '*') p++;
             return p == pattern.Length;
+        }
+
+        private void ApplyValidationCellStyles(DataGridViewRow row)
+        {
+            if (row == null || row.IsNewRow) return;
+
+            var existsCell = row.Cells["ExistsInCrm"];
+            var statusCell = row.Cells["Status"];
+
+            // Reset first (so old red/yellow goes away when things become OK)
+            ResetCellStyle(existsCell);
+            ResetCellStyle(statusCell);
+
+            var exists = (existsCell.Value?.ToString() ?? "").Trim();   // "Yes"/"No"/""
+            var status = (statusCell.Value?.ToString() ?? "").Trim();
+
+            bool localError =
+                status.StartsWith("Missing", StringComparison.OrdinalIgnoreCase) ||
+                status.StartsWith("Duplicate", StringComparison.OrdinalIgnoreCase) ||
+                status.IndexOf("File not found", StringComparison.OrdinalIgnoreCase) >= 0;
+
+            bool notInDataverse =
+                exists.Equals("No", StringComparison.OrdinalIgnoreCase) ||
+                status.IndexOf("Not found in Dataverse", StringComparison.OrdinalIgnoreCase) >= 0;
+
+            if (localError)
+            {
+                // Strong red for local errors
+                MarkCellError(statusCell);
+                return;
+            }
+
+            if (notInDataverse)
+            {
+                // Softer warning for Dataverse missing
+                MarkCellWarning(statusCell);
+                MarkCellError(existsCell);
+                return;
+            }
+
+            // OK => green on BOTH Exists + Status
+            bool ok =
+                status.Equals("OK", StringComparison.OrdinalIgnoreCase) ||
+                status.Equals("OK (local only)", StringComparison.OrdinalIgnoreCase);
+
+            if (ok)
+            {
+                MarkCellOk(existsCell);
+                MarkCellOk(statusCell);
+                return;
+            }
+        }
+
+        private void btnBrowseRoot_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new FolderBrowserDialog())
+            {
+                dlg.Description = "Select the root folder that contains the built webresource files";
+                if (Directory.Exists(txtRootFolder.Text))
+                    dlg.SelectedPath = txtRootFolder.Text;
+
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                    txtRootFolder.Text = dlg.SelectedPath;
+            }
+        }
+
+        private void btnClose_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void btnRemoveSelected_Click(object sender, EventArgs e)
+        {
+            foreach (DataGridViewRow row in dgvResources.SelectedRows)
+            {
+                if (!row.IsNewRow)
+                    dgvResources.Rows.Remove(row);
+            }
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            SaveFieldsToConfig();
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
         private void btnScan_Click(object sender, EventArgs e)
@@ -239,63 +221,6 @@ namespace XrmToolBox.AutoDeployer
             MessageBox.Show(this, $"Matched: {matched}\r\nAdded new: {added}", "AutoDeployer", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private DataGridViewRow FindRowByRelativePath(string relativePath)
-        {
-            if (string.IsNullOrWhiteSpace(relativePath))
-                return null;
-
-            var key = relativePath.Trim();
-
-            if (!dgvResources.Columns.Contains("RelativePath"))
-                return null; 
-
-            foreach (DataGridViewRow row in dgvResources.Rows)
-            {
-                if (row.IsNewRow) continue;
-
-                var val = row.Cells["RelativePath"].Value?.ToString();
-                if (val != null && string.Equals(val.Trim(), key, StringComparison.OrdinalIgnoreCase))
-                    return row;
-            }
-
-            return null;
-        }
-
-
-        private static string GetRelativePath(string root, string fullPath)
-        {
-            var rootNorm = Path.GetFullPath(root.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar);
-            var fullNorm = Path.GetFullPath(fullPath);
-
-            if (!fullNorm.StartsWith(rootNorm, StringComparison.OrdinalIgnoreCase))
-                return Path.GetFileName(fullNorm);
-
-            return fullNorm.Substring(rootNorm.Length);
-        }
-
-        private static string BuildCrmName(string prefix, string relativePath)
-        {
-            prefix = prefix.Trim().TrimEnd('/', '\\');
-            var rel = relativePath.Replace('\\', '/').TrimStart('/');
-            return $"{prefix}/{rel}";
-        }
-
-        private void btnRemoveSelected_Click(object sender, EventArgs e)
-        {
-            foreach (DataGridViewRow row in dgvResources.SelectedRows)
-            {
-                if (!row.IsNewRow)
-                    dgvResources.Rows.Remove(row);
-            }
-        }
-
-        private void btnClose_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
-        public WebResourceWatchConfig Config => config;
-
         private async void btnValidate_Click(object sender, EventArgs e)
         {
             if (!ValidateInputs(out var rootPath, out var prefix, out var patterns))
@@ -310,7 +235,7 @@ namespace XrmToolBox.AutoDeployer
                 if (row.IsNewRow) continue;
                 row.Cells["ExistsInCrm"].Value = "";
                 row.Cells["Status"].Value = "";
-                
+
                 ResetCellStyle(row.Cells["ExistsInCrm"]);
                 ResetCellStyle(row.Cells["Status"]);
             }
@@ -430,6 +355,116 @@ namespace XrmToolBox.AutoDeployer
             }
         }
 
+        private void dgvResources_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            ApplyValidationCellStyles(dgvResources.Rows[e.RowIndex]);
+        }
+
+        private DataGridViewRow FindRowByRelativePath(string relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(relativePath))
+                return null;
+
+            var key = relativePath.Trim();
+
+            if (!dgvResources.Columns.Contains("RelativePath"))
+                return null;
+
+            foreach (DataGridViewRow row in dgvResources.Rows)
+            {
+                if (row.IsNewRow) continue;
+
+                var val = row.Cells["RelativePath"].Value?.ToString();
+                if (val != null && string.Equals(val.Trim(), key, StringComparison.OrdinalIgnoreCase))
+                    return row;
+            }
+
+            return null;
+        }
+
+        private HashSet<string> GetExistingWebResourceNames(IEnumerable<string> names)
+        {
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var list = names.Where(n => !string.IsNullOrWhiteSpace(n)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            if (list.Count == 0) return set;
+
+            const int chunkSize = 200; // safe
+            for (int i = 0; i < list.Count; i += chunkSize)
+            {
+                var chunk = list.Skip(i).Take(chunkSize).ToArray();
+
+                var qe = new QueryExpression("webresource")
+                {
+                    ColumnSet = new ColumnSet("name")
+                };
+                qe.Criteria.AddCondition("name", ConditionOperator.In, chunk.Cast<object>().ToArray());
+
+                var res = _service.RetrieveMultiple(qe);
+                foreach (var e in res.Entities)
+                {
+                    var name = e.GetAttributeValue<string>("name");
+                    if (!string.IsNullOrWhiteSpace(name))
+                        set.Add(name);
+                }
+            }
+
+            return set;
+        }
+
+        private void MarkCellError(DataGridViewCell cell)
+        {
+            if (cell == null) return;
+            cell.Style.BackColor = Color.MistyRose;
+            cell.Style.ForeColor = Color.DarkRed;
+            cell.Style.Font = new Font(dgvResources.Font, FontStyle.Bold);
+        }
+
+        private void MarkCellOk(DataGridViewCell cell)
+        {
+            if (cell == null) return;
+            cell.Style.BackColor = Color.Honeydew;
+            cell.Style.ForeColor = Color.DarkGreen;
+            cell.Style.Font = new Font(dgvResources.Font, FontStyle.Bold);
+        }
+
+        private void MarkCellWarning(DataGridViewCell cell)
+        {
+            if (cell == null) return;
+            cell.Style.BackColor = Color.LemonChiffon;
+            cell.Style.ForeColor = Color.SaddleBrown;
+        }
+
+        private void PopulateFieldsFromConfig()
+        {
+            if (config == null) config = new WebResourceWatchConfig();
+            txtRootFolder.Text = config.RootPath ?? string.Empty;
+            txtPrefix.Text = config.Prefix ?? string.Empty;
+            txtPatterns.Text = config.Patterns ?? string.Empty;
+            chkPublishAfterUpdate.Checked = config.PublishEnabled;
+            numDebounce.Value = config.DebounceMs > 0 ? config.DebounceMs : 1500;
+            dgvResources.Rows.Clear();
+            if (config.Mappings != null)
+            {
+                foreach (var m in config.Mappings)
+                {
+                    dgvResources.Rows.Add(m.IsActive, m.RelativePath, m.CrmName, string.Empty, string.Empty);
+                }
+            }
+        }
+
+        private void RebuildCrmNamesFromPrefix(string prefix)
+        {
+            foreach (DataGridViewRow row in dgvResources.Rows)
+            {
+                if (row.IsNewRow) continue;
+
+                var rel = (row.Cells["RelativePath"].Value?.ToString() ?? "").Trim();
+                if (string.IsNullOrWhiteSpace(rel)) continue;
+
+                row.Cells["CrmName"].Value = BuildCrmName(prefix, rel);
+            }
+        }
 
         private void RecalculateCrmNames(string prefix, bool updateStatus = false)
         {
@@ -460,63 +495,6 @@ namespace XrmToolBox.AutoDeployer
             }
         }
 
-        private void txtPrefix_TextChanged(object sender, EventArgs e)
-        {
-            var prefix = (txtPrefix.Text ?? "").Trim();
-            if (!string.IsNullOrWhiteSpace(prefix))
-                RecalculateCrmNames(prefix, updateStatus: false);
-        }
-        private void ApplyValidationCellStyles(DataGridViewRow row)
-        {
-            if (row == null || row.IsNewRow) return;
-
-            var existsCell = row.Cells["ExistsInCrm"];
-            var statusCell = row.Cells["Status"];
-
-            // Reset first (so old red/yellow goes away when things become OK)
-            ResetCellStyle(existsCell);
-            ResetCellStyle(statusCell);
-
-            var exists = (existsCell.Value?.ToString() ?? "").Trim();   // "Yes"/"No"/""
-            var status = (statusCell.Value?.ToString() ?? "").Trim();
-
-            bool localError =
-                status.StartsWith("Missing", StringComparison.OrdinalIgnoreCase) ||
-                status.StartsWith("Duplicate", StringComparison.OrdinalIgnoreCase) ||
-                status.IndexOf("File not found", StringComparison.OrdinalIgnoreCase) >= 0;
-
-            bool notInDataverse =
-                exists.Equals("No", StringComparison.OrdinalIgnoreCase) ||
-                status.IndexOf("Not found in Dataverse", StringComparison.OrdinalIgnoreCase) >= 0;
-
-            if (localError)
-            {
-                // Strong red for local errors
-                MarkCellError(statusCell);
-                return;
-            }
-
-            if (notInDataverse)
-            {
-                // Softer warning for Dataverse missing
-                MarkCellWarning(statusCell);
-                MarkCellError(existsCell);
-                return;
-            }
-
-            // OK => green on BOTH Exists + Status
-            bool ok =
-                status.Equals("OK", StringComparison.OrdinalIgnoreCase) ||
-                status.Equals("OK (local only)", StringComparison.OrdinalIgnoreCase);
-
-            if (ok)
-            {
-                MarkCellOk(existsCell);
-                MarkCellOk(statusCell);
-                return;
-            }
-        }
-
         private void ResetCellStyle(DataGridViewCell cell)
         {
             if (cell == null) return;
@@ -525,33 +503,67 @@ namespace XrmToolBox.AutoDeployer
             cell.Style.Font = dgvResources.DefaultCellStyle.Font;
         }
 
-        private void MarkCellError(DataGridViewCell cell)
+        private void SaveFieldsToConfig()
         {
-            if (cell == null) return;
-            cell.Style.BackColor = Color.MistyRose;
-            cell.Style.ForeColor = Color.DarkRed;
-            cell.Style.Font = new Font(dgvResources.Font, FontStyle.Bold);
+            if (config == null) config = new WebResourceWatchConfig();
+            config.RootPath = (txtRootFolder.Text ?? "").Trim();
+            config.Prefix = (txtPrefix.Text ?? "").Trim();
+            config.Patterns = txtPatterns.Text;
+            config.PublishEnabled = chkPublishAfterUpdate.Checked;
+            config.DebounceMs = (int)numDebounce.Value;
+            config.Mappings = new List<WebResourceMapping>();
+            foreach (DataGridViewRow row in dgvResources.Rows)
+            {
+                if (row.IsNewRow) continue;
+                var rel = (row.Cells["RelativePath"].Value?.ToString() ?? "").Trim();
+                config.Mappings.Add(new WebResourceMapping
+                {
+                    IsActive = Convert.ToBoolean(row.Cells["Watch"].Value ?? false),
+                    RelativePath = rel,
+                    CrmName = BuildCrmName(config.Prefix, rel) // recompute, don’t trust grid
+                });
+            }
         }
 
-        private void MarkCellWarning(DataGridViewCell cell)
+        private void txtPrefix_TextChanged(object sender, EventArgs e)
         {
-            if (cell == null) return;
-            cell.Style.BackColor = Color.LemonChiffon;
-            cell.Style.ForeColor = Color.SaddleBrown;
-        }
-        private void MarkCellOk(DataGridViewCell cell)
-        {
-            if (cell == null) return;
-            cell.Style.BackColor = Color.Honeydew;
-            cell.Style.ForeColor = Color.DarkGreen;
-            cell.Style.Font = new Font(dgvResources.Font, FontStyle.Bold);
+            var prefix = (txtPrefix.Text ?? "").Trim();
+            if (!string.IsNullOrWhiteSpace(prefix))
+                RecalculateCrmNames(prefix, updateStatus: false);
         }
 
-
-        private void dgvResources_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        private bool ValidateInputs(out string rootPath, out string prefix, out string[] patterns)
         {
-            if (e.RowIndex < 0) return;
-            ApplyValidationCellStyles(dgvResources.Rows[e.RowIndex]);
+            rootPath = (txtRootFolder.Text ?? string.Empty).Trim();
+            prefix = (txtPrefix.Text ?? string.Empty).Trim();
+
+            patterns = (txtPatterns.Text ?? string.Empty)
+                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Trim())
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .ToArray();
+
+            if (string.IsNullOrWhiteSpace(rootPath) || !Directory.Exists(rootPath))
+            {
+                MessageBox.Show(this, "Please select a valid Root folder.", "AutoDeployer", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(prefix))
+            {
+                MessageBox.Show(this, "Please enter a Prefix (e.g. cint_mua).", "AutoDeployer", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            if (patterns.Length == 0)
+            {
+                MessageBox.Show(this, "Please add at least one pattern (e.g. scripts\\*.js).", "AutoDeployer", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            return true;
         }
+
+        #endregion Private Methods
     }
 }

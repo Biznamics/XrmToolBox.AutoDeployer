@@ -7,15 +7,7 @@ namespace XrmToolBox.AutoDeployer
 {
     internal static class DataverseFileUpload
     {
-        internal sealed class UploadProgress
-        {
-            public string Phase { get; set; }           // "Initializing", "Uploading", "Committing"
-            public int BlockIndex { get; set; }         // 1-based
-            public int BlockCount { get; set; }
-            public long BytesSent { get; set; }
-            public long TotalBytes { get; set; }
-            public string FileName { get; set; }
-        }
+        #region Public Methods
 
         public static void UploadPluginPackageNupkg(
             IOrganizationService svc,
@@ -119,5 +111,28 @@ namespace XrmToolBox.AutoDeployer
 
             svc.Execute(commitReq);
         }
+
+        #endregion Public Methods
+
+        #region Internal Classes
+
+        internal sealed class UploadProgress
+        {
+            #region Public Properties
+
+            public int BlockCount { get; set; }
+            public int BlockIndex { get; set; }
+
+            // 1-based
+            public long BytesSent { get; set; }
+
+            public string FileName { get; set; }
+            public string Phase { get; set; }           // "Initializing", "Uploading", "Committing"
+            public long TotalBytes { get; set; }
+
+            #endregion Public Properties
+        }
+
+        #endregion Internal Classes
     }
 }

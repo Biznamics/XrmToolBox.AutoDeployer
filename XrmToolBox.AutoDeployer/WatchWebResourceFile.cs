@@ -11,37 +11,21 @@ namespace XrmToolBox.AutoDeployer
 {
     internal sealed class WatchWebResourceFile : IDisposable
     {
-        private readonly Control owner;
-        private readonly IOrganizationService service;
-        private readonly WebResourceWatchConfig config;
-        private readonly WebResourceMapping mapping;
-        private readonly PluginControlBase host;
+        #region Private Fields
 
+        private readonly WebResourceWatchConfig config;
+        private readonly PluginControlBase host;
+        private readonly WebResourceMapping mapping;
+        private readonly Control owner;
+        private readonly object publishLock = new object();
+        private readonly IOrganizationService service;
         private int isUpdating; // 0 = no, 1 = yes
 
         private System.Threading.Timer publishTimer;
-        private readonly object publishLock = new object();
 
-        public ListViewItem ListItem { get; }
-        public string Log { get; private set; } = "";
-        public string Status { get; private set; } = "Watching";
+        #endregion Private Fields
 
-        public string RelativePath => mapping?.RelativePath;
-        public string CrmName => mapping?.CrmName;
-
-        public DateTime FileUpdated { get; private set; }
-        public DateTime PublishedUpdated { get; private set; }
-
-        public string FullPath { get; }
-        public string FileName { get; }
-        public string FolderPath { get; }
-
-        public Guid WebResourceId { get; private set; }
-
-        public FileSystemWatcher Watcher { get; private set; }
-
-        public event EventHandler Changed;
-        private void OnChanged() => Changed?.Invoke(this, EventArgs.Empty);
+        #region Public Constructors
 
         public WatchWebResourceFile(WebResourceWatchConfig cfg, WebResourceMapping map, IOrganizationService svc, Control uiOwner)
         {
@@ -95,12 +79,106 @@ namespace XrmToolBox.AutoDeployer
             UpdateList();
         }
 
-        private void OnFileRenamed(object sender, RenamedEventArgs e)
+        #endregion Public Constructors
+
+        #region Public Events
+
+        public event EventHandler Changed;
+
+        #endregion Public Events
+
+        #region Public Properties
+
+        public string CrmName => mapping?.CrmName;
+        public string FileName { get; }
+        public DateTime FileUpdated { get; private set; }
+        public string FolderPath { get; }
+        public string FullPath { get; }
+        public ListViewItem ListItem { get; }
+        public string Log { get; private set; } = "";
+        public DateTime PublishedUpdated { get; private set; }
+        public string RelativePath => mapping?.RelativePath;
+        public string Status { get; private set; } = "Watching";
+        public FileSystemWatcher Watcher { get; private set; }
+        public Guid WebResourceId { get; private set; }
+
+        #endregion Public Properties
+
+        #region Public Methods
+
+        public void Dispose()
         {
-            Status = "Renamed (not watching)";
-            Log += $"{DateTime.Now:HH:mm:ss.fff} File renamed: {e.OldName} -> {e.Name}\r\n";
-            UpdateList();
+            try
+            {
+                if (Watcher != null)
+                {
+                    Watcher.EnableRaisingEvents = false;
+                    Watcher.Changed -= OnFileChanged;
+                    Watcher.Renamed -= OnFileRenamed;
+                    Watcher.Dispose();
+                    Watcher = null;
+                }
+            }
+            catch { }
+
+            lock (publishLock)
+            {
+                publishTimer?.Dispose();
+                publishTimer = null;
+            }
         }
+
+        #endregion Public Methods
+
+        #region Private Methods
+
+        private static byte[] ReadFile(string fileName)
+        {
+            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                var buffer = new byte[fs.Length];
+                fs.Read(buffer, 0, buffer.Length);
+                return buffer;
+            }
+        }
+
+        private static void WaitForFileReady(string fullPath)
+        {
+            // called from WorkAsync background thread
+            const int maxAttempts = 40; // ~10s
+            for (int i = 0; i < maxAttempts; i++)
+            {
+                try
+                {
+                    using (File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                        return;
+                }
+                catch (FileNotFoundException) { }
+                catch (UnauthorizedAccessException) { }
+                catch (IOException) { }
+
+                Thread.Sleep(250);
+            }
+
+            // final attempt to throw meaningful exception
+            using (File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) { }
+        }
+
+        private Guid GetWebResourceIdByName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return Guid.Empty;
+
+            var query = new QueryExpression("webresource")
+            {
+                ColumnSet = new ColumnSet(false)
+            };
+            query.Criteria.AddCondition("name", ConditionOperator.Equal, name);
+
+            return service.RetrieveMultiple(query).Entities.FirstOrDefault()?.Id ?? Guid.Empty;
+        }
+
+        private void OnChanged() => Changed?.Invoke(this, EventArgs.Empty);
 
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
@@ -162,6 +240,24 @@ namespace XrmToolBox.AutoDeployer
             }));
         }
 
+        private void OnFileRenamed(object sender, RenamedEventArgs e)
+        {
+            Status = "Renamed (not watching)";
+            Log += $"{DateTime.Now:HH:mm:ss.fff} File renamed: {e.OldName} -> {e.Name}\r\n";
+            UpdateList();
+        }
+
+        private void PublishWebResource(Guid webResourceId)
+        {
+            var id = webResourceId.ToString("D").ToUpperInvariant();
+
+            var request = new OrganizationRequest("PublishXml");
+            request["ParameterXml"] =
+                $"<importexportxml><webresources><webresource>{id}</webresource></webresources></importexportxml>";
+
+            service.Execute(request);
+        }
+
         private void QueuePublish()
         {
             lock (publishLock)
@@ -213,67 +309,7 @@ namespace XrmToolBox.AutoDeployer
                         Log += $"{DateTime.Now:HH:mm:ss.fff} PUBLISH ERROR: {ex}\r\n";
                         UpdateList();
                     }
-
                 }, null, config.DebounceMs > 0 ? config.DebounceMs : 1500, Timeout.Infinite);
-
-            }
-        }
-
-
-        private void PublishWebResource(Guid webResourceId)
-        {
-            var id = webResourceId.ToString("D").ToUpperInvariant();
-
-            var request = new OrganizationRequest("PublishXml");
-            request["ParameterXml"] =
-                $"<importexportxml><webresources><webresource>{id}</webresource></webresources></importexportxml>";
-
-            service.Execute(request);
-        }
-
-        private Guid GetWebResourceIdByName(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                return Guid.Empty;
-
-            var query = new QueryExpression("webresource")
-            {
-                ColumnSet = new ColumnSet(false)
-            };
-            query.Criteria.AddCondition("name", ConditionOperator.Equal, name);
-
-            return service.RetrieveMultiple(query).Entities.FirstOrDefault()?.Id ?? Guid.Empty;
-        }
-
-        private static void WaitForFileReady(string fullPath)
-        {
-            // called from WorkAsync background thread
-            const int maxAttempts = 40; // ~10s
-            for (int i = 0; i < maxAttempts; i++)
-            {
-                try
-                {
-                    using (File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                        return;
-                }
-                catch (FileNotFoundException) { }
-                catch (UnauthorizedAccessException) { }
-                catch (IOException) { }
-
-                Thread.Sleep(250);
-            }
-
-            // final attempt to throw meaningful exception
-            using (File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) { }
-        }
-
-        private static byte[] ReadFile(string fileName)
-        {
-            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                var buffer = new byte[fs.Length];
-                fs.Read(buffer, 0, buffer.Length);
-                return buffer;
             }
         }
 
@@ -298,26 +334,6 @@ namespace XrmToolBox.AutoDeployer
             else mi();
         }
 
-        public void Dispose()
-        {
-            try
-            {
-                if (Watcher != null)
-                {
-                    Watcher.EnableRaisingEvents = false;
-                    Watcher.Changed -= OnFileChanged;
-                    Watcher.Renamed -= OnFileRenamed;
-                    Watcher.Dispose();
-                    Watcher = null;
-                }
-            }
-            catch { }
-
-            lock (publishLock)
-            {
-                publishTimer?.Dispose();
-                publishTimer = null;
-            }
-        }
+        #endregion Private Methods
     }
 }

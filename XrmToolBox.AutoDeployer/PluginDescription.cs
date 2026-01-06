@@ -16,7 +16,7 @@
     {
         #region Public Methods
 
-        public override IXrmToolBoxPluginControl GetControl() => 
+        public override IXrmToolBoxPluginControl GetControl() =>
             new MainControl();
 
         #endregion Public Methods

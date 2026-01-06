@@ -1,17 +1,29 @@
 ﻿namespace XrmToolBox.AutoDeployer
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Windows.Forms;
+    using McTools.Xrm.Connection;
+    using Microsoft.Xrm.Sdk;
+    using Microsoft.Xrm.Sdk.Query;
     using XrmToolBox.Extensibility;
     using XrmToolBox.Extensibility.Interfaces;
-    using System.Collections.Generic;
-    using McTools.Xrm.Connection;
-    using Microsoft.Xrm.Sdk.Query;
-    using Microsoft.Xrm.Sdk;
 
     public partial class MainControl : PluginControlBase, IGitHubPlugin, IWorkerHost, IAboutPlugin
     {
+        #region Private Fields
+
+        private readonly List<WatchPluginPackageFile> _packageWatchers = new List<WatchPluginPackageFile>();
+
+        private readonly List<WatchWebResourceFile> _webResourceWatchers = new List<WatchWebResourceFile>();
+
+        private bool _pluginPackageSupportChecked;
+
+        private bool _pluginPackageSupported;
+
+        #endregion Private Fields
+
         #region Public Constructors
 
         public MainControl()
@@ -47,18 +59,50 @@
             }
         }
 
+        public override void UpdateConnection(IOrganizationService newService, ConnectionDetail detail, string actionName, object parameter)
+        {
+            base.UpdateConnection(newService, detail, actionName, parameter);
+
+            // Reset per-connection state
+            _pluginPackageSupportChecked = false;
+            _pluginPackageSupported = false;
+
+            if (detail == null || newService == null)
+            {
+                ClearWebResourceWatchers();
+                ClearPluginPackageWatchers();
+                pluginPackageToolStripMenuItem.Visible = false;
+                return;
+            }
+
+            UpdatePluginPackageUi();     // decides visibility; clears pkg watchers if not supported
+            RefreshWebResourceWatchers();
+
+            // Only start package watchers when supported (otherwise you're guaranteed to fail on-prem)
+            if (_pluginPackageSupported)
+                RefreshPluginPackageWatchers();
+        }
+
         #endregion Public Methods
-
-        #region Private/Internal Properties
-
-        private bool _pluginPackageSupported; // Plugin Package are only for Online CRM. Used to hide/show related UI.
-        private bool _pluginPackageSupportChecked;
-
-        private readonly List<WatchWebResourceFile> _webResourceWatchers = new List<WatchWebResourceFile>();
-        #endregion Private/Internal Properties
 
         #region Private Methods
 
+        private void AddPluginAssembly()
+        {
+            if (ofdPlugin.ShowDialog() == DialogResult.OK)
+            {
+                var plugin = new WatchPluginFile(ofdPlugin.FileName, Service, this);
+                plugin.Changed += Plugin_Changed;
+                listWatching.Items.Add(plugin.ListItem);
+                if (listWatching.SelectedItems.Count == 0)
+                {
+                    listWatching.Items[0].Selected = true;
+                }
+                bDelSelected.Enabled = true;
+            }
+        }
+
+        // Plugin Package are only for Online CRM. Used to hide/show related UI.
         private void bAddPluginMenuItem_Click(object sender, EventArgs e)
         {
             AddPluginAssembly();
@@ -84,45 +128,6 @@
                 }
             }
         }
-
-        private void AddPluginAssembly()
-        {
-            if (ofdPlugin.ShowDialog() == DialogResult.OK)
-            {
-                var plugin = new WatchPluginFile(ofdPlugin.FileName, Service, this);
-                plugin.Changed += Plugin_Changed;
-                listWatching.Items.Add(plugin.ListItem);
-                if (listWatching.SelectedItems.Count == 0)
-                {
-                    listWatching.Items[0].Selected = true;
-                }
-                bDelSelected.Enabled = true;
-            }
-        }
-
-        private void Plugin_Changed(object sender, EventArgs e)
-        {
-            if (listWatching.SelectedItems.Count == 1)
-            {
-                var tag = listWatching.SelectedItems[0].Tag;
-                switch (tag)
-                {
-                    case WatchPluginFile plugin:
-                        txtLog.Text = plugin.Log;
-                        return;
-                    case WatchWebResourceFile wr:
-                        txtLog.Text = wr.Log;
-                        return;
-                    case WatchPluginPackageFile pp:
-                        txtLog.Text = pp.Log;
-                        return;
-                }
-            }
-
-            txtLog.Text = string.Empty;
-        }
-
-        #endregion Private Methods
 
         private void bDelSelected_Click(object sender, EventArgs e)
         {
@@ -179,55 +184,20 @@
             UpdateWrSummary();
         }
 
-
-        private void listWatching_SelectedIndexChanged(object sender, EventArgs e)
+        private void ClearPluginPackageWatchers()
         {
-            Plugin_Changed(sender, e);
-            bDelSelected.Enabled = listWatching.SelectedItems.Count > 0;
-            UpdateWrSummary();
-        }
-
-        private void RefreshWebResourceWatchers()
-        {
-            // Remove existing WR watchers from list + dispose them
             for (int i = listWatching.Items.Count - 1; i >= 0; i--)
             {
                 var item = listWatching.Items[i];
-                if (item.Tag is WatchWebResourceFile wr)
+                if (item.Tag is WatchPluginPackageFile pp)
                 {
-                    wr.Dispose();
+                    pp.Dispose();
                     listWatching.Items.RemoveAt(i);
                 }
             }
-            _webResourceWatchers.Clear();
-
-            var cfg = LoadWebResourceConfig();
-            if (cfg == null || string.IsNullOrWhiteSpace(cfg.RootPath))
-                return;
-
-            if (Service == null)
-            {
-                MessageBox.Show("Not connected to an environment.", "AutoDeployer",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
-            if (cfg.Mappings == null || cfg.Mappings.Count == 0)
-                return;
-
-            foreach (var mapping in cfg.Mappings)
-            {
-                if (!mapping.IsActive) continue;
-
-                var watcher = new WatchWebResourceFile(cfg, mapping, Service, this);
-                watcher.Changed += Plugin_Changed; // reuse existing log display
-                _webResourceWatchers.Add(watcher);
-                listWatching.Items.Add(watcher.ListItem);
-            }
-
-            bDelSelected.Enabled = listWatching.Items.Count > 0;
-            UpdateWrSummary();
+            _packageWatchers.Clear();
         }
+
         private void ClearWebResourceWatchers()
         {
             for (int i = listWatching.Items.Count - 1; i >= 0; i--)
@@ -243,33 +213,29 @@
             UpdateWrSummary();
         }
 
-        public override void UpdateConnection(IOrganizationService newService, ConnectionDetail detail, string actionName, object parameter)
-        {
-            base.UpdateConnection(newService, detail, actionName, parameter);
+        private string GetPackageSettingsName()
+            => (ConnectionDetail?.ConnectionId ?? Guid.Empty).ToString("D");
 
-            // Reset per-connection state
-            _pluginPackageSupportChecked = false;
-            _pluginPackageSupported = false;
-
-            if (detail == null || newService == null)
-            {
-                ClearWebResourceWatchers();
-                ClearPluginPackageWatchers();
-                pluginPackageToolStripMenuItem.Visible = false;
-                return;
-            }
-
-            UpdatePluginPackageUi();     // decides visibility; clears pkg watchers if not supported
-            RefreshWebResourceWatchers();
-
-            // Only start package watchers when supported (otherwise you're guaranteed to fail on-prem)
-            if (_pluginPackageSupported)
-                RefreshPluginPackageWatchers();
-        }
         private string GetWebResourceSettingsName()
         {
             // “name” suffix => per connection file
             return (ConnectionDetail?.ConnectionId ?? Guid.Empty).ToString("D");
+        }
+
+        private void listWatching_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Plugin_Changed(sender, e);
+            bDelSelected.Enabled = listWatching.SelectedItems.Count > 0;
+            UpdateWrSummary();
+        }
+
+        private PluginPackageWatchConfig LoadPackageConfig()
+        {
+            var name = GetPackageSettingsName();
+            if (SettingsManager.Instance.TryLoad(GetType(), out PluginPackageWatchConfig cfg, name + ".packages"))
+                return cfg;
+
+            return new PluginPackageWatchConfig();
         }
 
         private WebResourceWatchConfig LoadWebResourceConfig()
@@ -281,26 +247,29 @@
 
             return new WebResourceWatchConfig { PublishEnabled = true, DebounceMs = 1500 };
         }
-        private void SaveWebResourceConfig(WebResourceWatchConfig cfg)
+
+        private void Plugin_Changed(object sender, EventArgs e)
         {
-            var name = GetWebResourceSettingsName();
-            SettingsManager.Instance.Save(GetType(), cfg, name);
-        }
-        private void UpdateWrSummary()
-        {
-            var cfg = LoadWebResourceConfig();
-            if (cfg == null || string.IsNullOrWhiteSpace(cfg.RootPath))
+            if (listWatching.SelectedItems.Count == 1)
             {
-                tsWrSummary.Text = "Web resources: not configured";
-                return;
+                var tag = listWatching.SelectedItems[0].Tag;
+                switch (tag)
+                {
+                    case WatchPluginFile plugin:
+                        txtLog.Text = plugin.Log;
+                        return;
+
+                    case WatchWebResourceFile wr:
+                        txtLog.Text = wr.Log;
+                        return;
+
+                    case WatchPluginPackageFile pp:
+                        txtLog.Text = pp.Log;
+                        return;
+                }
             }
 
-            var total = cfg.Mappings?.Count ?? 0;
-            var active = cfg.Mappings?.Count(m => m.IsActive) ?? 0;
-
-            tsWrSummary.Text =
-                $"Web resources: {active} active (of {total}) — Root: {cfg.RootPath} — Prefix: {cfg.Prefix} — " +
-                $"Publish: {(cfg.PublishEnabled ? "On" : "Off")} — Debounce: {cfg.DebounceMs}ms";
+            txtLog.Text = string.Empty;
         }
 
         private void pluginPackageToolStripMenuItem_Click(object sender, EventArgs e)
@@ -356,17 +325,78 @@
             }
         }
 
-
-        private string GetPackageSettingsName() 
-            => (ConnectionDetail?.ConnectionId ?? Guid.Empty).ToString("D");
-
-        private PluginPackageWatchConfig LoadPackageConfig()
+        private void RefreshPluginPackageWatchers()
         {
-            var name = GetPackageSettingsName();
-            if (SettingsManager.Instance.TryLoad(GetType(), out PluginPackageWatchConfig cfg, name + ".packages"))
-                return cfg;
+            // remove existing package watchers from list + dispose
+            for (int i = listWatching.Items.Count - 1; i >= 0; i--)
+            {
+                var item = listWatching.Items[i];
+                if (item.Tag is WatchPluginPackageFile pp)
+                {
+                    pp.Dispose();
+                    listWatching.Items.RemoveAt(i);
+                }
+            }
+            _packageWatchers.Clear();
 
-            return new PluginPackageWatchConfig();
+            var cfg = LoadPackageConfig();
+            if (cfg?.Items == null || cfg.Items.Count == 0 || Service == null)
+                return;
+
+            foreach (var it in cfg.Items.Where(x => x.IsActive))
+            {
+                if (string.IsNullOrWhiteSpace(it.NupkgPath) || it.PackageId == Guid.Empty)
+                    continue;
+
+                var watcher = new WatchPluginPackageFile(it, Service, this, () => SavePackageConfig(cfg));
+                watcher.Changed += Plugin_Changed;
+                _packageWatchers.Add(watcher);
+                listWatching.Items.Add(watcher.ListItem);
+            }
+
+            bDelSelected.Enabled = listWatching.Items.Count > 0;
+        }
+
+        private void RefreshWebResourceWatchers()
+        {
+            // Remove existing WR watchers from list + dispose them
+            for (int i = listWatching.Items.Count - 1; i >= 0; i--)
+            {
+                var item = listWatching.Items[i];
+                if (item.Tag is WatchWebResourceFile wr)
+                {
+                    wr.Dispose();
+                    listWatching.Items.RemoveAt(i);
+                }
+            }
+            _webResourceWatchers.Clear();
+
+            var cfg = LoadWebResourceConfig();
+            if (cfg == null || string.IsNullOrWhiteSpace(cfg.RootPath))
+                return;
+
+            if (Service == null)
+            {
+                MessageBox.Show("Not connected to an environment.", "AutoDeployer",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (cfg.Mappings == null || cfg.Mappings.Count == 0)
+                return;
+
+            foreach (var mapping in cfg.Mappings)
+            {
+                if (!mapping.IsActive) continue;
+
+                var watcher = new WatchWebResourceFile(cfg, mapping, Service, this);
+                watcher.Changed += Plugin_Changed; // reuse existing log display
+                _webResourceWatchers.Add(watcher);
+                listWatching.Items.Add(watcher.ListItem);
+            }
+
+            bDelSelected.Enabled = listWatching.Items.Count > 0;
+            UpdateWrSummary();
         }
 
         private void SavePackageConfig(PluginPackageWatchConfig cfg)
@@ -374,6 +404,13 @@
             var name = GetPackageSettingsName();
             SettingsManager.Instance.Save(GetType(), cfg, name + ".packages");
         }
+
+        private void SaveWebResourceConfig(WebResourceWatchConfig cfg)
+        {
+            var name = GetWebResourceSettingsName();
+            SettingsManager.Instance.Save(GetType(), cfg, name);
+        }
+
         private bool TrySelectPackageFromDataverse(out Guid packageId, out string packageName)
         {
             packageId = Guid.Empty;
@@ -411,57 +448,7 @@
                 packageName = chosen.Name;
                 return true;
             }
-
         }
-
-
-        private readonly List<WatchPluginPackageFile> _packageWatchers = new List<WatchPluginPackageFile>();
-
-        private void RefreshPluginPackageWatchers()
-        {
-            // remove existing package watchers from list + dispose
-            for (int i = listWatching.Items.Count - 1; i >= 0; i--)
-            {
-                var item = listWatching.Items[i];
-                if (item.Tag is WatchPluginPackageFile pp)
-                {
-                    pp.Dispose();
-                    listWatching.Items.RemoveAt(i);
-                }
-            }
-            _packageWatchers.Clear();
-
-            var cfg = LoadPackageConfig();
-            if (cfg?.Items == null || cfg.Items.Count == 0 || Service == null)
-                return;
-
-            foreach (var it in cfg.Items.Where(x => x.IsActive))
-            {
-                if (string.IsNullOrWhiteSpace(it.NupkgPath) || it.PackageId == Guid.Empty)
-                    continue;
-
-                var watcher = new WatchPluginPackageFile(it, Service, this, () => SavePackageConfig(cfg));
-                watcher.Changed += Plugin_Changed;
-                _packageWatchers.Add(watcher);
-                listWatching.Items.Add(watcher.ListItem);
-            }
-
-            bDelSelected.Enabled = listWatching.Items.Count > 0;
-        }
-        private void ClearPluginPackageWatchers()
-        {
-            for (int i = listWatching.Items.Count - 1; i >= 0; i--)
-            {
-                var item = listWatching.Items[i];
-                if (item.Tag is WatchPluginPackageFile pp)
-                {
-                    pp.Dispose();
-                    listWatching.Items.RemoveAt(i);
-                }
-            }
-            _packageWatchers.Clear();
-        }
-
 
         private void UpdatePluginPackageUi()
         {
@@ -515,11 +502,26 @@
                     else
                         ClearPluginPackageWatchers();
                 }
-
             });
         }
 
+        private void UpdateWrSummary()
+        {
+            var cfg = LoadWebResourceConfig();
+            if (cfg == null || string.IsNullOrWhiteSpace(cfg.RootPath))
+            {
+                tsWrSummary.Text = "Web resources: not configured";
+                return;
+            }
 
+            var total = cfg.Mappings?.Count ?? 0;
+            var active = cfg.Mappings?.Count(m => m.IsActive) ?? 0;
 
+            tsWrSummary.Text =
+                $"Web resources: {active} active (of {total}) — Root: {cfg.RootPath} — Prefix: {cfg.Prefix} — " +
+                $"Publish: {(cfg.PublishEnabled ? "On" : "Off")} — Debounce: {cfg.DebounceMs}ms";
+        }
+
+        #endregion Private Methods
     }
 }
