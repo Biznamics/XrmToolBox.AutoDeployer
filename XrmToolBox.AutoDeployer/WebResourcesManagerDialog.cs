@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO;
@@ -35,6 +36,8 @@ namespace XrmToolBox.AutoDeployer
 
             _service = service; // can be null
             config = initial ?? new WebResourceWatchConfig { PublishEnabled = true, DebounceMs = 1500 };
+            dgvResources.Columns["RelativePath"].SortMode = DataGridViewColumnSortMode.Automatic;
+
             PopulateFieldsFromConfig();
         }
 
@@ -177,10 +180,117 @@ namespace XrmToolBox.AutoDeployer
                 if (!row.IsNewRow)
                     dgvResources.Rows.Remove(row);
             }
+            SortGrid();
         }
 
-        private void btnSave_Click(object sender, EventArgs e)
+        private async void btnSave_Click(object sender, EventArgs e)
         {
+            if (!ValidateInputs(out var rootPath, out var prefix, out var patterns))
+                return;
+
+            // Always keep CrmName consistent with Prefix
+            RebuildCrmNamesFromPrefix(prefix);
+
+            // Only enforce rules for rows the user actually wants to watch
+            var watchedRows = dgvResources.Rows.Cast<DataGridViewRow>()
+                .Where(r => !r.IsNewRow && Convert.ToBoolean(r.Cells["Watch"].Value ?? false))
+                .ToList();
+
+            if (watchedRows.Count > 0 && _service == null)
+            {
+                MessageBox.Show(this,
+                    "Connect to Dataverse first. Saving watched web resources requires validating they exist in Dataverse.",
+                    "AutoDeployer - Save blocked",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Clear previous status for watched rows only (optional but nice)
+            foreach (var row in watchedRows)
+            {
+                row.Cells["ExistsInCrm"].Value = "";
+                row.Cells["Status"].Value = "";
+                ResetCellStyle(row.Cells["ExistsInCrm"]);
+                ResetCellStyle(row.Cells["Status"]);
+            }
+
+            // Local validation for watched rows
+            var crmNames = new List<string>();
+            var localErrors = new List<string>();
+
+            foreach (var row in watchedRows)
+            {
+                var rel = (row.Cells["RelativePath"].Value?.ToString() ?? "").Trim();
+                var crm = (row.Cells["CrmName"].Value?.ToString() ?? "").Trim();
+
+                if (string.IsNullOrWhiteSpace(rel))
+                {
+                    row.Cells["Status"].Value = "Missing RelativePath";
+                    localErrors.Add("A watched row is missing RelativePath.");
+                    ApplyValidationCellStyles(row);
+                    continue;
+                }
+
+                var fullPath = Path.Combine(rootPath, rel);
+                if (!File.Exists(fullPath))
+                {
+                    row.Cells["Status"].Value = "File not found under Root folder";
+                    localErrors.Add(fullPath);
+                    ApplyValidationCellStyles(row);
+                    continue;
+                }
+
+                crmNames.Add(crm);
+            }
+
+            if (localErrors.Count > 0)
+            {
+                MessageBox.Show(this,
+                    $"Cannot save because {localErrors.Count} watched row(s) have local problems.\r\n\r\nFix the highlighted rows and try again.",
+                    "AutoDeployer - Save blocked",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                FocusFirstBadRow(watchedRows);
+                return;
+            }
+
+            // Dataverse validation for watched rows
+            var existing = await Task.Run(() => GetExistingWebResourceNames(crmNames));
+
+            bool anyMissing = false;
+            DataGridViewRow firstMissingRow = null;
+
+            foreach (var row in watchedRows)
+            {
+                var crm = (row.Cells["CrmName"].Value?.ToString() ?? "").Trim();
+                var exists = existing.Contains(crm);
+
+                row.Cells["ExistsInCrm"].Value = exists ? "Yes" : "No";
+                row.Cells["Status"].Value = exists ? "OK" : "Not found in Dataverse";
+                ApplyValidationCellStyles(row);
+
+                if (!exists)
+                {
+                    anyMissing = true;
+                    if (firstMissingRow == null) firstMissingRow = row;
+                }
+            }
+
+            if (anyMissing)
+            {
+                MessageBox.Show(this,
+                    "Cannot save because one or more WATCHED web resources do not exist in Dataverse.\r\n\r\n" +
+                    "Fix the Prefix / ensure the web resources exist, then Validate/Save again.",
+                    "AutoDeployer - Save blocked",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                if (firstMissingRow != null)
+                    FocusRow(firstMissingRow);
+
+                return;
+            }
+
+            // All watched rows look valid => save
             SaveFieldsToConfig();
             DialogResult = DialogResult.OK;
             Close();
@@ -217,7 +327,7 @@ namespace XrmToolBox.AutoDeployer
                 dgvResources.Rows.Add(false, rel, crmName, "", "");
                 added++;
             }
-
+            SortGrid();
             MessageBox.Show(this, $"Matched: {matched}\r\nAdded new: {added}", "AutoDeployer", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -383,6 +493,26 @@ namespace XrmToolBox.AutoDeployer
             return null;
         }
 
+        private void FocusFirstBadRow(List<DataGridViewRow> rows)
+        {
+            var bad = rows.FirstOrDefault(r =>
+            {
+                var s = (r.Cells["Status"].Value?.ToString() ?? "").Trim();
+                return !string.IsNullOrWhiteSpace(s) && !s.Equals("OK", StringComparison.OrdinalIgnoreCase);
+            });
+
+            if (bad != null) FocusRow(bad);
+        }
+
+        private void FocusRow(DataGridViewRow row)
+        {
+            dgvResources.ClearSelection();
+            row.Selected = true;
+            dgvResources.CurrentCell = row.Cells["Status"];
+            if (row.Index >= 0)
+                dgvResources.FirstDisplayedScrollingRowIndex = row.Index;
+        }
+
         private HashSet<string> GetExistingWebResourceNames(IEnumerable<string> names)
         {
             var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -523,6 +653,12 @@ namespace XrmToolBox.AutoDeployer
                     CrmName = BuildCrmName(config.Prefix, rel) // recompute, don’t trust grid
                 });
             }
+        }
+
+        private void SortGrid()
+        {
+            // Ensure DataGridView allows programmatic sorting
+            dgvResources.Sort(dgvResources.Columns["RelativePath"], ListSortDirection.Ascending);
         }
 
         private void txtPrefix_TextChanged(object sender, EventArgs e)
