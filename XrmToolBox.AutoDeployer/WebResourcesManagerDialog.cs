@@ -1,27 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using McTools.Xrm.Connection;
-using McTools.Xrm.Connection.WinForms.AppCode;
-using XrmToolBox.Extensibility;
+using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Query;
 
 namespace XrmToolBox.AutoDeployer
 {
     public partial class WebResourcesManagerDialog : Form
     {
         private WebResourceWatchConfig config;
+        private readonly IOrganizationService _service;
 
-
-        private readonly Microsoft.Xrm.Sdk.IOrganizationService _service;
-
-        public WebResourcesManagerDialog(WebResourceWatchConfig initial, Microsoft.Xrm.Sdk.IOrganizationService service)
+        public WebResourcesManagerDialog(WebResourceWatchConfig initial, IOrganizationService service)
         {
             InitializeComponent();
             dgvResources.Columns["RelativePath"].ReadOnly = true;
@@ -60,11 +55,11 @@ namespace XrmToolBox.AutoDeployer
             {
                 var chunk = list.Skip(i).Take(chunkSize).ToArray();
 
-                var qe = new Microsoft.Xrm.Sdk.Query.QueryExpression("webresource")
+                var qe = new QueryExpression("webresource")
                 {
-                    ColumnSet = new Microsoft.Xrm.Sdk.Query.ColumnSet("name")
+                    ColumnSet = new ColumnSet("name")
                 };
-                qe.Criteria.AddCondition("name", Microsoft.Xrm.Sdk.Query.ConditionOperator.In, chunk.Cast<object>().ToArray());
+                qe.Criteria.AddCondition("name", ConditionOperator.In, chunk.Cast<object>().ToArray());
 
                 var res = _service.RetrieveMultiple(qe);
                 foreach (var e in res.Entities)
@@ -533,23 +528,23 @@ namespace XrmToolBox.AutoDeployer
         private void MarkCellError(DataGridViewCell cell)
         {
             if (cell == null) return;
-            cell.Style.BackColor = System.Drawing.Color.MistyRose;
-            cell.Style.ForeColor = System.Drawing.Color.DarkRed;
-            cell.Style.Font = new System.Drawing.Font(dgvResources.Font, System.Drawing.FontStyle.Bold);
+            cell.Style.BackColor = Color.MistyRose;
+            cell.Style.ForeColor = Color.DarkRed;
+            cell.Style.Font = new Font(dgvResources.Font, FontStyle.Bold);
         }
 
         private void MarkCellWarning(DataGridViewCell cell)
         {
             if (cell == null) return;
-            cell.Style.BackColor = System.Drawing.Color.LemonChiffon;
-            cell.Style.ForeColor = System.Drawing.Color.SaddleBrown;
+            cell.Style.BackColor = Color.LemonChiffon;
+            cell.Style.ForeColor = Color.SaddleBrown;
         }
         private void MarkCellOk(DataGridViewCell cell)
         {
             if (cell == null) return;
-            cell.Style.BackColor = System.Drawing.Color.Honeydew;
-            cell.Style.ForeColor = System.Drawing.Color.DarkGreen;
-            cell.Style.Font = new System.Drawing.Font(dgvResources.Font, System.Drawing.FontStyle.Bold);
+            cell.Style.BackColor = Color.Honeydew;
+            cell.Style.ForeColor = Color.DarkGreen;
+            cell.Style.Font = new Font(dgvResources.Font, FontStyle.Bold);
         }
 
 

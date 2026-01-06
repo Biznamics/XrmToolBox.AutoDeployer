@@ -1,13 +1,14 @@
 ﻿namespace XrmToolBox.AutoDeployer
 {
     using System;
-    using System.IO;
     using System.Linq;
     using System.Windows.Forms;
     using XrmToolBox.Extensibility;
     using XrmToolBox.Extensibility.Interfaces;
     using System.Collections.Generic;
     using McTools.Xrm.Connection;
+    using Microsoft.Xrm.Sdk.Query;
+    using Microsoft.Xrm.Sdk;
 
     public partial class MainControl : PluginControlBase, IGitHubPlugin, IWorkerHost, IAboutPlugin
     {
@@ -242,8 +243,7 @@
             UpdateWrSummary();
         }
 
-        public override void UpdateConnection(Microsoft.Xrm.Sdk.IOrganizationService newService, McTools.Xrm.Connection.ConnectionDetail detail, string actionName,
-            object parameter)
+        public override void UpdateConnection(IOrganizationService newService, ConnectionDetail detail, string actionName, object parameter)
         {
             base.UpdateConnection(newService, detail, actionName, parameter);
 
@@ -379,11 +379,11 @@
             packageId = Guid.Empty;
             packageName = null;
 
-            var qe = new Microsoft.Xrm.Sdk.Query.QueryExpression("pluginpackage")
+            var qe = new QueryExpression("pluginpackage")
             {
-                ColumnSet = new Microsoft.Xrm.Sdk.Query.ColumnSet("name")
+                ColumnSet = new ColumnSet("name")
             };
-            qe.Orders.Add(new Microsoft.Xrm.Sdk.Query.OrderExpression("name", Microsoft.Xrm.Sdk.Query.OrderType.Ascending));
+            qe.Orders.Add(new OrderExpression("name", OrderType.Ascending));
 
             var results = Service.RetrieveMultiple(qe).Entities
                 .Select(e => new { Id = e.Id, Name = e.GetAttributeValue<string>("name") ?? e.Id.ToString() })
@@ -484,15 +484,15 @@
 
             WorkAsync(new WorkAsyncInfo
             {
-                Message = "Checking Plugin Package support...",
+                Message = "Updating connection...",
                 Work = (w, a) =>
                 {
                     try
                     {
                         // If entity doesn't exist (typical on-prem), this throws.
-                        var qe = new Microsoft.Xrm.Sdk.Query.QueryExpression("pluginpackage")
+                        var qe = new QueryExpression("pluginpackage")
                         {
-                            ColumnSet = new Microsoft.Xrm.Sdk.Query.ColumnSet(false),
+                            ColumnSet = new ColumnSet(false),
                             TopCount = 1
                         };
 
