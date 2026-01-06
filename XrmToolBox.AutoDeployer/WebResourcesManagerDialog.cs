@@ -504,13 +504,22 @@ namespace XrmToolBox.AutoDeployer
             if (notInDataverse)
             {
                 // Softer warning for Dataverse missing
-                //MarkCellWarning(existsCell);
-                //MarkCellWarning(statusCell);
+                MarkCellWarning(statusCell);
                 MarkCellError(existsCell);
                 return;
             }
 
-            // OK => keep defaults
+            // OK => green on BOTH Exists + Status
+            bool ok =
+                status.Equals("OK", StringComparison.OrdinalIgnoreCase) ||
+                status.Equals("OK (local only)", StringComparison.OrdinalIgnoreCase);
+
+            if (ok)
+            {
+                MarkCellOk(existsCell);
+                MarkCellOk(statusCell);
+                return;
+            }
         }
 
         private void ResetCellStyle(DataGridViewCell cell)
@@ -534,6 +543,13 @@ namespace XrmToolBox.AutoDeployer
             if (cell == null) return;
             cell.Style.BackColor = System.Drawing.Color.LemonChiffon;
             cell.Style.ForeColor = System.Drawing.Color.SaddleBrown;
+        }
+        private void MarkCellOk(DataGridViewCell cell)
+        {
+            if (cell == null) return;
+            cell.Style.BackColor = System.Drawing.Color.Honeydew;
+            cell.Style.ForeColor = System.Drawing.Color.DarkGreen;
+            cell.Style.Font = new System.Drawing.Font(dgvResources.Font, System.Drawing.FontStyle.Bold);
         }
 
 
