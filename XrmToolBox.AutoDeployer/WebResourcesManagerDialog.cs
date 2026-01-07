@@ -300,15 +300,30 @@ namespace XrmToolBox.AutoDeployer
         {
             if (!ValidateInputs(out var rootPath, out var prefix, out var patterns))
                 return;
-            RebuildCrmNamesFromPrefix(prefix);
-            var allFiles = Directory.GetFiles(rootPath, "*.*", SearchOption.AllDirectories);
 
-            int added = 0;
+            // Preserve Watch flags by RelativePath
+            var previousWatch = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            foreach (DataGridViewRow row in dgvResources.Rows)
+            {
+                if (row.IsNewRow) continue;
+
+                var relOld = (row.Cells["RelativePath"].Value?.ToString() ?? "").Trim();
+                if (relOld.Length == 0) continue;
+
+                previousWatch[relOld] = Convert.ToBoolean(row.Cells["Watch"].Value ?? false);
+            }
+
+            dgvResources.Rows.Clear();
+
+            var rootNorm = Path.GetFullPath((rootPath ?? "").Trim());
+            var allFiles = Directory.GetFiles(rootNorm, "*.*", SearchOption.AllDirectories);
+
             int matched = 0;
+            int added = 0;
 
             foreach (var file in allFiles)
             {
-                var rel = GetRelativePath(rootPath, file); // scripts\foo.js
+                var rel = GetRelativePath(rootNorm, file);
                 if (!patterns.Any(pat => WildcardMatch(rel, pat)))
                     continue;
 
@@ -316,19 +331,25 @@ namespace XrmToolBox.AutoDeployer
 
                 var crmName = BuildCrmName(prefix, rel);
 
-                var existingRow = FindRowByRelativePath(rel);
-                if (existingRow != null)
-                {
-                    // Prefix may have changed since row was added => rewrite CrmName
-                    existingRow.Cells["CrmName"].Value = crmName;
-                    continue;
-                }
+                bool watch = false;
+                if (previousWatch.TryGetValue(rel, out var prev))
+                    watch = prev;
 
-                dgvResources.Rows.Add(false, rel, crmName, "", "");
+                dgvResources.Rows.Add(watch, rel, crmName, "", "");
                 added++;
             }
-            SortGrid();
-            MessageBox.Show(this, $"Matched: {matched}\r\nAdded new: {added}", "AutoDeployer", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            // Clear stale validation state/colors from previous session
+            ClearValidationColumnsAndStyles();
+
+            // Keep stable order
+            dgvResources.Sort(dgvResources.Columns["RelativePath"], ListSortDirection.Ascending);
+
+            MessageBox.Show(this,
+                $"Matched: {matched}\r\nAdded: {added}",
+                "AutoDeployer",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
         }
 
         private async void btnValidate_Click(object sender, EventArgs e)
@@ -462,6 +483,22 @@ namespace XrmToolBox.AutoDeployer
             {
                 MessageBox.Show(this, "Validation completed.", "AutoDeployer - Validate",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void ClearValidationColumnsAndStyles()
+        {
+            foreach (DataGridViewRow row in dgvResources.Rows)
+            {
+                if (row.IsNewRow) continue;
+
+                // Clear values
+                row.Cells["ExistsInCrm"].Value = "";
+                row.Cells["Status"].Value = "";
+
+                // Reset styling (only those cells)
+                ResetCellStyle(row.Cells["ExistsInCrm"]);
+                ResetCellStyle(row.Cells["Status"]);
             }
         }
 
