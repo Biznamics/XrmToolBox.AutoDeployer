@@ -13,14 +13,14 @@
 		<description>Tool to automatically upload plugin assemblies and web resources if they are changed during build process.</description>
 		<summary>Tool to automatically upload plugin assemblies and web resources if they are changed during build process.</summary>
 		<releaseNotes>
-			- Added Web Resources auto-deploy: watch local files and upload/update Dataverse Web Resources on change.
-			- New "Web Resources Manager" to configure root folder, prefix, scan patterns, and per-file mappings (enable/disable watch).
-			- Plugin Assembly auto-deploy improvements: support for multiple assemblies, custom paths, and file patterns.
-			- Plugin Package auto-deploy: watch .nupkg files created by Visual Studio and upload/update contained assemblies on change.
-			- Debounce support to avoid multiple uploads during rapid saves.
-			- Optional publish after update (configurable).
-			- Configuration is persisted per environment/connection.
-			- UI improvements: Add menu now supports both Plugin Assembly and Web Resources; watcher list supports both types; Remove selected works for both.
+- Added Web Resources auto-deploy: watch local files and upload/update Dataverse Web Resources on change.
+- New "Web Resources Manager" to configure root folder, prefix, scan patterns, and per-file mappings (enable/disable watch).
+- Plugin Assembly auto-deploy improvements: support for multiple assemblies, custom paths, and file patterns.
+- Plugin Package auto-deploy: watch .nupkg files created by Visual Studio and upload/update contained assemblies on change.
+- Debounce support to avoid multiple uploads during rapid saves.
+- Optional publish after update (configurable).
+- Configuration is persisted per environment/connection.
+- UI improvements: Add menu now supports both Plugin Assembly and Web Resources; watcher list supports both types; Remove selected works for both.
 		</releaseNotes>
 		<copyright>Copyright 2016-2026 Imran, Jonas, Alexey</copyright>
 		<tags>XrmToolBox Plugins Auto Deployer Tool</tags>
