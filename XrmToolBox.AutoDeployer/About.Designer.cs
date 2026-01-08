@@ -62,7 +62,7 @@ namespace XrmToolBox.AutoDeployer
             // linkLabelImran
             // 
             this.linkLabelImran.AutoSize = true;
-            this.linkLabelImran.Location = new System.Drawing.Point(103, 323);
+            this.linkLabelImran.Location = new System.Drawing.Point(101, 323);
             this.linkLabelImran.Name = "linkLabelImran";
             this.linkLabelImran.Size = new System.Drawing.Size(90, 13);
             this.linkLabelImran.TabIndex = 54;
@@ -73,7 +73,7 @@ namespace XrmToolBox.AutoDeployer
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(15, 347);
+            this.label3.Location = new System.Drawing.Point(15, 370);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(82, 13);
             this.label3.TabIndex = 53;
@@ -82,7 +82,7 @@ namespace XrmToolBox.AutoDeployer
             // linkLabelAlexey
             // 
             this.linkLabelAlexey.AutoSize = true;
-            this.linkLabelAlexey.Location = new System.Drawing.Point(103, 347);
+            this.linkLabelAlexey.Location = new System.Drawing.Point(101, 370);
             this.linkLabelAlexey.Name = "linkLabelAlexey";
             this.linkLabelAlexey.Size = new System.Drawing.Size(57, 13);
             this.linkLabelAlexey.TabIndex = 52;
@@ -195,7 +195,7 @@ namespace XrmToolBox.AutoDeployer
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(17, 369);
+            this.label2.Location = new System.Drawing.Point(15, 346);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(64, 13);
             this.label2.TabIndex = 56;
@@ -204,7 +204,7 @@ namespace XrmToolBox.AutoDeployer
             // linkRappen
             // 
             this.linkRappen.AutoSize = true;
-            this.linkRappen.Location = new System.Drawing.Point(103, 369);
+            this.linkRappen.Location = new System.Drawing.Point(101, 346);
             this.linkRappen.Name = "linkRappen";
             this.linkRappen.Size = new System.Drawing.Size(51, 13);
             this.linkRappen.TabIndex = 57;

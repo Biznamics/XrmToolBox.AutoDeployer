@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyCompany("Imran Akram, Jonas Rapp and Alexey Shytikov")]
-[assembly: AssemblyCopyright("Copyright © Biznamics AB 2026")]
-[assembly: AssemblyTitle("Biznamics XrmToolBox AutoDeployer")]
+[assembly: AssemblyCopyright("Copyright © 2026")]
+[assembly: AssemblyTitle("ImranAkram XrmToolBox AutoDeployer")]
 [assembly: AssemblyDescription("Auto Deployer Tool for Plugins and Web Resources")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyProduct("Biznamics.XTB.AutoDeployer")]
+[assembly: AssemblyProduct("ImranAkram.XTB.AutoDeployer")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

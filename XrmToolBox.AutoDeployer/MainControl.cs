@@ -39,7 +39,7 @@
             "XrmToolBox.AutoDeployer";
 
         string IGitHubPlugin.UserName =>
-            "Biznamics";
+            "ImranAkram";
 
         #endregion Public Properties
 

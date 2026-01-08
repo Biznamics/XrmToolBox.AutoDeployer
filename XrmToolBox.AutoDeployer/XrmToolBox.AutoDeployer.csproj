@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>XrmToolBox.AutoDeployer</RootNamespace>
-    <AssemblyName>Innofactor.XTB.AutoDeployer</AssemblyName>
+    <AssemblyName>ImranAkram.XTB.AutoDeployer</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
