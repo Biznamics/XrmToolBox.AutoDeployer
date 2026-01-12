@@ -14,6 +14,8 @@
     {
         #region Private Fields
 
+        private static readonly System.Drawing.Color ZebraEven = System.Drawing.Color.White;
+        private static readonly System.Drawing.Color ZebraOdd = System.Drawing.Color.FromArgb(245, 245, 245);
         private readonly List<WatchPluginPackageFile> _packageWatchers = new List<WatchPluginPackageFile>();
 
         private readonly List<WatchWebResourceFile> _webResourceWatchers = new List<WatchWebResourceFile>();
@@ -29,6 +31,11 @@
         public MainControl()
         {
             InitializeComponent();
+            listWatching.FullRowSelect = true;
+            listWatching.HideSelection = false;
+            listWatching.UseCompatibleStateImageBehavior = false;
+
+            listWatching.GridLines = false;
         }
 
         #endregion Public Constructors
@@ -99,6 +106,31 @@
                     listWatching.Items[0].Selected = true;
                 }
                 bDelSelected.Enabled = true;
+                ApplyZebraToListWatchingPreserveSelection();
+            }
+        }
+
+        private void ApplyZebraToListWatching()
+        {
+            for (int i = 0; i < listWatching.Items.Count; i++)
+            {
+                var item = listWatching.Items[i];
+                item.BackColor = (i % 2 == 0) ? ZebraEven : ZebraOdd;
+            }
+        }
+
+        // Call this after you add/remove items, and after refreshes.
+        // It keeps the selected row readable by forcing highlight colors.
+        private void ApplyZebraToListWatchingPreserveSelection()
+        {
+            var selected = listWatching.SelectedIndices.Cast<int>().ToList();
+            ApplyZebraToListWatching();
+
+            // re-apply selection (helps if Windows repaints oddly)
+            foreach (var i in selected)
+            {
+                if (i >= 0 && i < listWatching.Items.Count)
+                    listWatching.Items[i].Selected = true;
             }
         }
 
@@ -182,6 +214,7 @@
             txtLog.Text = string.Empty;
             bDelSelected.Enabled = listWatching.SelectedItems.Count > 0;
             UpdateWrSummary();
+            ApplyZebraToListWatchingPreserveSelection();
         }
 
         private void ClearPluginPackageWatchers()
@@ -196,6 +229,7 @@
                 }
             }
             _packageWatchers.Clear();
+            ApplyZebraToListWatchingPreserveSelection();
         }
 
         private void ClearWebResourceWatchers()
@@ -211,6 +245,7 @@
             }
             _webResourceWatchers.Clear();
             UpdateWrSummary();
+            ApplyZebraToListWatchingPreserveSelection();
         }
 
         private string GetPackageSettingsName()
@@ -355,6 +390,7 @@
             }
 
             bDelSelected.Enabled = listWatching.Items.Count > 0;
+            ApplyZebraToListWatchingPreserveSelection();
         }
 
         private void RefreshWebResourceWatchers()
@@ -397,6 +433,7 @@
 
             bDelSelected.Enabled = listWatching.Items.Count > 0;
             UpdateWrSummary();
+            ApplyZebraToListWatchingPreserveSelection();
         }
 
         private void SavePackageConfig(PluginPackageWatchConfig cfg)
@@ -432,10 +469,12 @@
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return false;
             }
-
             var names = results.Select(r => r.Name).ToList();
 
-            using (var dlg = new SelectItemDialog("Select Plugin Package", names))
+            using (var dlg = new SelectItemDialog(
+                "Select Plugin Package",
+                names,
+                "Select the Dataverse Plugin Package to upload into.\r\nDouble-click an item or select it and click OK.", okText: "Select"))
             {
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return false;

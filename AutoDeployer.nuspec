@@ -4,7 +4,7 @@
 		<id>ImranAkram.XTB.AutoDeployer</id>
 		<version>1.0.0</version>
 		<title>Auto Deployer Tool for XrmToolBox</title>
-		<authors>Imran Akram, Jonas Rapp, Alexey Shytikov</authors>
+		<authors>Imran Akram, Jonas Rapp, Oleksii Shytikov</authors>
 		<owners>imranakram, rappen, biznamics</owners>
 		<projectUrl>https://github.com/ImranAkram/XrmToolBox.AutoDeployer</projectUrl>
 		<icon>icon.png</icon>
@@ -22,7 +22,7 @@
 - Configuration is persisted per environment/connection.
 - UI improvements: Add menu now supports both Plugin Assembly and Web Resources; watcher list supports both types; Remove selected works for both.
 		</releaseNotes>
-		<copyright>Copyright 2016-2026 Imran, Jonas, Alexey</copyright>
+		<copyright>Copyright 2016-2026 Imran, Jonas, Oleksii</copyright>
 		<tags>XrmToolBox Plugins Auto Deployer Tool</tags>
 		<dependencies>
 			<dependency id="XrmToolBox" version="1.2025.7.71" />
