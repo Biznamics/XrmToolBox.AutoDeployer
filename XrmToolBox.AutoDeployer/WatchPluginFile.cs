@@ -11,23 +11,14 @@ namespace XrmToolBox.AutoDeployer
 {
     internal class WatchPluginFile : IDisposable
     {
+        #region Private Fields
+
         private Control owner;
         private IOrganizationService service;
 
-        public ListViewItem ListItem { get; private set; }
-        public string File { get; private set; }
-        public string Path { get; private set; }
-        public DateTime FileUpdated { get; set; }
-        public DateTime PluginUpdated { get; set; }
-        public string Status { get; private set; }
-        public string FullPath { get; private set; }
-        public Guid PluginId { get; private set; }
-        public string Log { get; set; }
-        public FileSystemWatcher Watcher { get; }
+        #endregion Private Fields
 
-        public event EventHandler Changed;
-
-        protected virtual void OnChanged() { Changed?.Invoke(this, EventArgs.Empty); }
+        #region Public Constructors
 
         public WatchPluginFile(string filename, IOrganizationService Service, Control Owner)
         {
@@ -38,8 +29,16 @@ namespace XrmToolBox.AutoDeployer
             Path = System.IO.Path.GetDirectoryName(filename);
             Status = "Watching";
             Log = $"Started at {DateTime.Now}\r\n";
-            PluginId = GetAssemblyId(Service);
-            if (PluginId != Guid.Empty)
+            IsWebResource = IsWebResourceFile(File);
+            if (IsWebResource)
+            {
+                WebResourceId = GetWebResourceId(Service);
+            }
+            else
+            {
+                PluginId = GetAssemblyId(Service);
+            }
+            if ((IsWebResource && WebResourceId != Guid.Empty) || (!IsWebResource && PluginId != Guid.Empty))
             {
                 Watcher = new FileSystemWatcher();
                 Watcher.Path = Path;
@@ -53,9 +52,93 @@ namespace XrmToolBox.AutoDeployer
             UpdateList();
         }
 
+        #endregion Public Constructors
+
+        #region Public Events
+
+        public event EventHandler Changed;
+
+        #endregion Public Events
+
+        #region Public Properties
+
+        public string File { get; private set; }
+        public DateTime FileUpdated { get; set; }
+        public string FullPath { get; private set; }
+        public ListViewItem ListItem { get; private set; }
+        public string Log { get; set; }
+        public string Path { get; private set; }
+        public Guid PluginId { get; private set; }
+        public DateTime PluginUpdated { get; set; }
+        public string Status { get; private set; }
+        public FileSystemWatcher Watcher { get; }
+        public Guid WebResourceId { get; private set; }
+
+        #endregion Public Properties
+
+        #region Private Properties
+
+        private bool IsWebResource { get; set; }
+
+        #endregion Private Properties
+
+        #region Public Methods
+
+        public void Dispose()
+        {
+            Watcher.Changed -= Plugin_Changed;
+        }
+
+        #endregion Public Methods
+
+        #region Protected Methods
+
+        protected virtual void OnChanged()
+        { Changed?.Invoke(this, EventArgs.Empty); }
+
+        #endregion Protected Methods
+
+        #region Private Methods
+
+        private Guid GetAssemblyId(IOrganizationService Service)
+        {
+            if (Service == null)
+            {
+                return Guid.Empty;
+            }
+            var assembly = Assembly.Load(ReadFile(FullPath));
+            var chunks = assembly.FullName.Split(new string[] { ", ", "Version=", "Culture=", "PublicKeyToken=" }, StringSplitOptions.RemoveEmptyEntries);
+            var query = new QueryExpression("pluginassembly");
+            query.Criteria.AddCondition("name", ConditionOperator.Equal, chunks[0]);
+            query.Criteria.AddCondition("version", ConditionOperator.Equal, chunks[1]);
+            query.Criteria.AddCondition("culture", ConditionOperator.Equal, chunks[2]);
+            query.Criteria.AddCondition("publickeytoken", ConditionOperator.Equal, chunks[3]);
+            return Service.RetrieveMultiple(query).Entities.FirstOrDefault()?.Id ?? Guid.Empty;
+        }
+
+        private Guid GetWebResourceId(IOrganizationService Service)
+        {
+            if (Service == null)
+            {
+                return Guid.Empty;
+            }
+            var name = File;
+            // Try to find by name (case-insensitive)
+            var query = new QueryExpression("webresource");
+            query.Criteria.AddCondition("name", ConditionOperator.Equal, name);
+            var entity = Service.RetrieveMultiple(query).Entities.FirstOrDefault();
+            return entity?.Id ?? Guid.Empty;
+        }
+
+        private bool IsWebResourceFile(string fileName)
+        {
+            var ext = System.IO.Path.GetExtension(fileName).ToLowerInvariant();
+            return ext == ".js" || ext == ".html" || ext == ".css" || ext == ".xml" || ext == ".png" || ext == ".jpg" || ext == ".gif";
+        }
+
         private void Plugin_Changed(object sender, FileSystemEventArgs e)
         {
-            // Waiting for plugin become fully available for reading
+            // Waiting for plugin/webresource become fully available for reading
             while (true)
             {
                 try
@@ -92,13 +175,20 @@ namespace XrmToolBox.AutoDeployer
                     Log += DateTime.Now.ToString("HH:mm:ss.fff") + $" File updated\r\n";
                     UpdateList();
 
-                    var plugin = new Entity("pluginassembly", PluginId);
-                    plugin["content"] = Convert.ToBase64String(ReadFile(file));
-                    service.Update(plugin);
+                    if (IsWebResource)
+                    {
+                        UpdateWebResource(file);
+                    }
+                    else
+                    {
+                        var plugin = new Entity("pluginassembly", PluginId);
+                        plugin["content"] = Convert.ToBase64String(ReadFile(file));
+                        service.Update(plugin);
+                    }
 
                     PluginUpdated = DateTime.Now;
                     Status = "Update ok";
-                    Log += DateTime.Now.ToString("HH:mm:ss.fff") + $" Dataverse plugin updated\r\n";
+                    Log += DateTime.Now.ToString("HH:mm:ss.fff") + (IsWebResource ? " Dataverse web resource updated\r\n" : " Dataverse plugin updated\r\n");
                     UpdateList();
                 }
             }
@@ -107,6 +197,25 @@ namespace XrmToolBox.AutoDeployer
                 Status = $"Error: {ex.Message}";
                 UpdateList();
             }
+        }
+
+        private void PublishWebResource(Guid webResourceId)
+        {
+            var request = new OrganizationRequest("PublishXml");
+            var xml = $"<importexportxml><webresources><webresource>{webResourceId.ToString("D").ToUpperInvariant()}</webresource></webresources></importexportxml>";
+            request["ParameterXml"] = xml;
+            service.Execute(request);
+        }
+
+        private byte[] ReadFile(string fileName)
+        {
+            byte[] buffer = null;
+            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            {
+                buffer = new byte[fs.Length];
+                fs.Read(buffer, 0, (int)fs.Length);
+            }
+            return buffer;
         }
 
         private void UpdateList()
@@ -134,36 +243,15 @@ namespace XrmToolBox.AutoDeployer
             }
         }
 
-        private Guid GetAssemblyId(IOrganizationService Service)
+        private void UpdateWebResource(string file)
         {
-            if (Service == null)
-            {
-                return Guid.Empty;
-            }
-            var assembly = Assembly.Load(ReadFile(FullPath));
-            var chunks = assembly.FullName.Split(new string[] { ", ", "Version=", "Culture=", "PublicKeyToken=" }, StringSplitOptions.RemoveEmptyEntries);
-            var query = new QueryExpression("pluginassembly");
-            query.Criteria.AddCondition("name", ConditionOperator.Equal, chunks[0]);
-            query.Criteria.AddCondition("version", ConditionOperator.Equal, chunks[1]);
-            query.Criteria.AddCondition("culture", ConditionOperator.Equal, chunks[2]);
-            query.Criteria.AddCondition("publickeytoken", ConditionOperator.Equal, chunks[3]);
-            return Service.RetrieveMultiple(query).Entities.FirstOrDefault()?.Id ?? Guid.Empty;
+            if (WebResourceId == Guid.Empty) return;
+            var webResource = new Entity("webresource", WebResourceId);
+            webResource["content"] = Convert.ToBase64String(ReadFile(file));
+            service.Update(webResource);
+            PublishWebResource(WebResourceId);
         }
 
-        private byte[] ReadFile(string fileName)
-        {
-            byte[] buffer = null;
-            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-            {
-                buffer = new byte[fs.Length];
-                fs.Read(buffer, 0, (int)fs.Length);
-            }
-            return buffer;
-        }
-
-        public void Dispose()
-        {
-            Watcher.Changed -= Plugin_Changed;
-        }
+        #endregion Private Methods
     }
 }

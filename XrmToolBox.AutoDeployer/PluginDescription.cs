@@ -5,8 +5,8 @@
     using XrmToolBox.Extensibility.Interfaces;
 
     [Export(typeof(IXrmToolBoxPlugin)),
-    ExportMetadata("Name", "Auto Deployer for Plugins"),
-    ExportMetadata("Description", "Tool to automatically upload plugin assemblies if they are changed during build process"),
+    ExportMetadata("Name", "Auto Deployer for Plugins and Web Resources"),
+    ExportMetadata("Description", "Tool to automatically upload plugin assemblies and web resources as they are changed during build process"),
     ExportMetadata("SmallImageBase64", Constants.B64_IMAGE_SMALL), // null for "no logo" image or base64 image content
     ExportMetadata("BigImageBase64", Constants.B64_IMAGE_LARGE), // null for "no logo" image or base64 image content
     ExportMetadata("BackgroundColor", "#ffffff"), // Use a HTML color name
@@ -16,7 +16,7 @@
     {
         #region Public Methods
 
-        public override IXrmToolBoxPluginControl GetControl() => 
+        public override IXrmToolBoxPluginControl GetControl() =>
             new MainControl();
 
         #endregion Public Methods

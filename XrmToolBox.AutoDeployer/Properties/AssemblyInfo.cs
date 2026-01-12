@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyCompany("Imran Akram, Jonas Rapp and Alexey Shytikov and Innofactor AB")]
-[assembly: AssemblyCopyright("Copyright © Innofactor AB 2022")]
-[assembly: AssemblyTitle("Innofactor XrmToolBox AutoDeployer")]
-[assembly: AssemblyDescription("Auto Deployer Tool for Plugins by Innofactor AB")]
+[assembly: AssemblyCompany("Imran Akram, Jonas Rapp and Alexey Shytikov")]
+[assembly: AssemblyCopyright("Copyright © 2026")]
+[assembly: AssemblyTitle("ImranAkram XrmToolBox AutoDeployer")]
+[assembly: AssemblyDescription("Auto Deployer Tool for Plugins and Web Resources")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyProduct("Innofactor.XTB.AutoDeployer")]
+[assembly: AssemblyProduct("ImranAkram.XTB.AutoDeployer")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.2019.3.26")]
-[assembly: AssemblyFileVersion("1.2019.3.26")]
+[assembly: AssemblyVersion("1.2026.1.1")]
+[assembly: AssemblyFileVersion("1.2026.1.1")]

@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>XrmToolBox.AutoDeployer</RootNamespace>
-    <AssemblyName>Innofactor.XTB.AutoDeployer</AssemblyName>
+    <AssemblyName>ImranAkram.XTB.AutoDeployer</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -36,141 +36,16 @@
     <ApplicationIcon>ADT.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="McTools.Xrm.Connection, Version=1.2025.7.63, Culture=neutral, PublicKeyToken=96037217801d9658, processorArchitecture=MSIL">
-      <HintPath>..\packages\MscrmTools.Xrm.Connection.1.2025.7.63\lib\net48\McTools.Xrm.Connection.dll</HintPath>
-    </Reference>
-    <Reference Include="McTools.Xrm.Connection.WinForms, Version=1.2025.7.63, Culture=neutral, PublicKeyToken=f1559f79cf894e27, processorArchitecture=MSIL">
-      <HintPath>..\packages\MscrmTools.Xrm.Connection.1.2025.7.63\lib\net48\McTools.Xrm.Connection.WinForms.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.9.0.7\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Crm.Sdk.Proxy, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.59\lib\net462\Microsoft.Crm.Sdk.Proxy.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.AI, Version=9.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Extensions.AI.9.7.1\lib\net462\Microsoft.Extensions.AI.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.AI.Abstractions, Version=9.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Extensions.AI.Abstractions.9.7.1\lib\net462\Microsoft.Extensions.AI.Abstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Caching.Abstractions, Version=9.0.0.7, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Extensions.Caching.Abstractions.9.0.7\lib\net462\Microsoft.Extensions.Caching.Abstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=9.0.0.7, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.9.0.7\lib\net462\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=9.0.0.7, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.9.0.7\lib\net462\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Primitives, Version=9.0.0.7, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Extensions.Primitives.9.0.7\lib\net462\Microsoft.Extensions.Primitives.dll</HintPath>
-    </Reference>
-    <Reference Include="microsoft.identitymodel, Version=3.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.IdentityModel.7.0.0\lib\net35\microsoft.identitymodel.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.IdentityModel.Clients.ActiveDirectory, Version=5.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.IdentityModel.Clients.ActiveDirectory.5.3.0\lib\net45\Microsoft.IdentityModel.Clients.ActiveDirectory.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Rest.ClientRuntime, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.CoreAssembly.9.1.1.65\lib\net462\Microsoft.Rest.ClientRuntime.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Web.WebView2.Core, Version=1.0.3351.48, Culture=neutral, PublicKeyToken=2a8ab48044d2601e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Web.WebView2.1.0.3351.48\lib\net462\Microsoft.Web.WebView2.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Web.WebView2.WinForms, Version=1.0.3351.48, Culture=neutral, PublicKeyToken=2a8ab48044d2601e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Web.WebView2.1.0.3351.48\lib\net462\Microsoft.Web.WebView2.WinForms.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Web.WebView2.Wpf, Version=1.0.3351.48, Culture=neutral, PublicKeyToken=2a8ab48044d2601e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Web.WebView2.1.0.3351.48\lib\net462\Microsoft.Web.WebView2.Wpf.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Web.XmlTransform, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Web.Xdt.3.1.0\lib\net40\Microsoft.Web.XmlTransform.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Sdk, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.CoreAssemblies.9.0.2.59\lib\net462\Microsoft.Xrm.Sdk.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Sdk.Deployment, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.Deployment.9.0.2.34\lib\net462\Microsoft.Xrm.Sdk.Deployment.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Sdk.Workflow, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.Workflow.9.0.2.59\lib\net462\Microsoft.Xrm.Sdk.Workflow.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Tooling.Connector, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.CoreAssembly.9.1.1.65\lib\net462\Microsoft.Xrm.Tooling.Connector.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Tooling.CrmConnectControl, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.WpfControls.9.1.1.65\lib\net462\Microsoft.Xrm.Tooling.CrmConnectControl.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Tooling.Ui.Styles, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.WpfControls.9.1.1.65\lib\net462\Microsoft.Xrm.Tooling.Ui.Styles.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xrm.Tooling.WebResourceUtility, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CrmSdk.XrmTooling.WpfControls.9.1.1.65\lib\net462\Microsoft.Xrm.Tooling.WebResourceUtility.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="NuGet.Protocol, Version=5.9.1.11, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\NuGet.Protocol.5.9.1\lib\net472\NuGet.Protocol.dll</HintPath>
     </Reference>
-    <Reference Include="ScintillaNET, Version=3.6.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\jacobslusser.ScintillaNET.3.6.3\lib\net40\ScintillaNET.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
-    </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Diagnostics.DiagnosticSource, Version=9.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Diagnostics.DiagnosticSource.9.0.7\lib\net462\System.Diagnostics.DiagnosticSource.dll</HintPath>
-    </Reference>
     <Reference Include="System.IO.Compression" />
-    <Reference Include="System.IO.Pipelines, Version=9.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.IO.Pipelines.9.0.7\lib\net462\System.IO.Pipelines.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
-    </Reference>
     <Reference Include="System.Net" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Net.Http.WebRequest" />
     <Reference Include="System.Numerics" />
-    <Reference Include="System.Numerics.Vectors, Version=4.1.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime, Version=4.1.1.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.4.3.1\lib\net462\System.Runtime.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Security.Cryptography.Algorithms, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Security.Cryptography.Algorithms.4.3.1\lib\net463\System.Security.Cryptography.Algorithms.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.ServiceModel.Http, Version=4.10.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ServiceModel.Http.4.10.3\lib\net461\System.ServiceModel.Http.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ServiceModel.Primitives, Version=4.10.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ServiceModel.Primitives.4.10.3\lib\net461\System.ServiceModel.Primitives.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Text.Encodings.Web, Version=9.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Text.Encodings.Web.9.0.7\lib\net462\System.Text.Encodings.Web.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Text.Json, Version=9.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Text.Json.9.0.7\lib\net462\System.Text.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.Channels, Version=9.0.0.7, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Threading.Channels.9.0.7\lib\net462\System.Threading.Channels.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.6.3\lib\net462\System.Threading.Tasks.Extensions.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -196,21 +71,6 @@
     <Reference Include="System.Workflow.Activities" />
     <Reference Include="System.Workflow.ComponentModel" />
     <Reference Include="System.Workflow.Runtime" />
-    <Reference Include="WeifenLuo.WinFormsUI.Docking, Version=3.0.6.0, Culture=neutral, PublicKeyToken=5cded1a1a0a7b481, processorArchitecture=MSIL">
-      <HintPath>..\packages\DockPanelSuite.3.0.6\lib\net40\WeifenLuo.WinFormsUI.Docking.dll</HintPath>
-    </Reference>
-    <Reference Include="WeifenLuo.WinFormsUI.Docking.ThemeVS2015, Version=3.0.6.0, Culture=neutral, PublicKeyToken=5cded1a1a0a7b481, processorArchitecture=MSIL">
-      <HintPath>..\packages\DockPanelSuite.ThemeVS2015.3.0.6\lib\net40\WeifenLuo.WinFormsUI.Docking.ThemeVS2015.dll</HintPath>
-    </Reference>
-    <Reference Include="XrmToolBox, Version=1.2025.7.71, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\XrmToolBoxPackage.1.2025.7.71\lib\net48\XrmToolBox.exe</HintPath>
-    </Reference>
-    <Reference Include="XrmToolBox.Extensibility, Version=1.2025.7.71, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\XrmToolBoxPackage.1.2025.7.71\lib\net48\XrmToolBox.Extensibility.dll</HintPath>
-    </Reference>
-    <Reference Include="XrmToolBox.ToolLibrary, Version=1.2025.7.71, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\XrmToolBoxPackage.1.2025.7.71\lib\net48\XrmToolBox.ToolLibrary.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="About.cs">
@@ -220,7 +80,9 @@
       <DependentUpon>About.cs</DependentUpon>
     </Compile>
     <Compile Include="Constants.cs" />
+    <Compile Include="DataverseFileUpload.cs" />
     <Compile Include="Destination.cs" />
+    <Compile Include="PluginPackageWatchConfig.cs" />
     <Compile Include="Resource.cs" />
     <Compile Include="MainControl.cs">
       <SubType>UserControl</SubType>
@@ -235,7 +97,19 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SelectItemDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WatchPluginPackageFile.cs" />
+    <Compile Include="WatchWebResourceFile.cs" />
     <Compile Include="WatchPluginFile.cs" />
+    <Compile Include="WebResourcesManagerDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WebResourcesManagerDialog.Designer.cs">
+      <DependentUpon>WebResourcesManagerDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WebResourceWatchConfig.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="About.resx">
@@ -249,23 +123,80 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="WebResourcesManagerDialog.resx">
+      <DependentUpon>WebResourcesManagerDialog.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\icon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\ADT.ico" />
-  </ItemGroup>
-  <ItemGroup>
+    <Content Include="Resources\ADT_256.png" />
+    <Content Include="Resources\ADT_32.png" />
+    <Content Include="Resources\ADT_withText_256.png" />
     <Content Include="ADT.ico" />
+    <Content Include="Resources\assembly.png" />
+    <Content Include="Resources\AutoDeployerTool_128.png" />
+    <Content Include="Resources\PluginPackage.png" />
+    <Content Include="Resources\WebResource.png" />
     <None Include="Resources\delete2.png" />
     <None Include="Resources\navigate_plus.png" />
-    <None Include="Resources\ADT32x32.png" />
-    <None Include="Resources\ADT80x80.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CrmSdk.Workflow">
+      <Version>9.0.2.59</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions">
+      <Version>9.0.7</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions">
+      <Version>9.0.7</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.IdentityModel">
+      <Version>7.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NETCore.Platforms">
+      <Version>7.0.4</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NETCore.Targets">
+      <Version>5.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Web.Xdt">
+      <Version>3.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="MscrmTools.Xrm.Connection">
+      <Version>1.2025.9.64</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.3</Version>
+    </PackageReference>
+    <PackageReference Include="System.Memory">
+      <Version>4.6.3</Version>
+    </PackageReference>
+    <PackageReference Include="System.Runtime">
+      <Version>4.3.1</Version>
+    </PackageReference>
+    <PackageReference Include="System.Security.Cryptography.Algorithms">
+      <Version>4.3.1</Version>
+    </PackageReference>
+    <PackageReference Include="System.Security.Cryptography.X509Certificates">
+      <Version>4.3.2</Version>
+    </PackageReference>
+    <PackageReference Include="System.Text.Json">
+      <Version>9.0.7</Version>
+    </PackageReference>
+    <PackageReference Include="System.Threading.Channels">
+      <Version>9.0.7</Version>
+    </PackageReference>
+    <PackageReference Include="System.Threading.Tasks.Extensions">
+      <Version>4.6.3</Version>
+    </PackageReference>
+    <PackageReference Include="System.ValueTuple">
+      <Version>4.6.1</Version>
+    </PackageReference>
+    <PackageReference Include="XrmToolBoxPackage">
+      <Version>1.2025.10.74</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="..\XrmToolBox.Helpers\XrmToolBox.Helpers.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -275,15 +206,6 @@
   move /Y $(TargetName).* Plugins
 )</PostBuildEvent>
   </PropertyGroup>
-  <Import Project="..\packages\Microsoft.Web.WebView2.1.0.3351.48\build\Microsoft.Web.WebView2.targets" Condition="Exists('..\packages\Microsoft.Web.WebView2.1.0.3351.48\build\Microsoft.Web.WebView2.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.Web.WebView2.1.0.3351.48\build\Microsoft.Web.WebView2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Web.WebView2.1.0.3351.48\build\Microsoft.Web.WebView2.targets'))" />
-    <Error Condition="!Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets'))" />
-  </Target>
-  <Import Project="..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
