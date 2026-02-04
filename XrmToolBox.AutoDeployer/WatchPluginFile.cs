@@ -43,9 +43,10 @@ namespace XrmToolBox.AutoDeployer
                 Watcher = new FileSystemWatcher();
                 Watcher.Path = Path;
                 Watcher.Filter = File;
-                Watcher.NotifyFilter = NotifyFilters.LastWrite;
+                Watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.CreationTime | NotifyFilters.FileName;
                 Watcher.EnableRaisingEvents = true;
                 Watcher.Changed += Plugin_Changed;
+                Watcher.Created += Plugin_Changed;
             }
             ListItem = new ListViewItem();
             ListItem.Tag = this;
@@ -87,6 +88,7 @@ namespace XrmToolBox.AutoDeployer
         public void Dispose()
         {
             Watcher.Changed -= Plugin_Changed;
+            Watcher.Created -= Plugin_Changed;
         }
 
         #endregion Public Methods
@@ -106,13 +108,23 @@ namespace XrmToolBox.AutoDeployer
             {
                 return Guid.Empty;
             }
-            var assembly = Assembly.Load(ReadFile(FullPath));
-            var chunks = assembly.FullName.Split(new string[] { ", ", "Version=", "Culture=", "PublicKeyToken=" }, StringSplitOptions.RemoveEmptyEntries);
+
+            var assembly     = Assembly.Load(ReadFile(FullPath));
+            var assemblyName = assembly.GetName();
+            // Major.Minor as "1.2" and prefix "1.2." to avoid matching "1.23"
+            var majorMinor   = assemblyName.Version.ToString(2);
+            var versionPrefix = majorMinor + ".";
+
             var query = new QueryExpression("pluginassembly");
-            query.Criteria.AddCondition("name", ConditionOperator.Equal, chunks[0]);
-            query.Criteria.AddCondition("version", ConditionOperator.Equal, chunks[1]);
-            query.Criteria.AddCondition("culture", ConditionOperator.Equal, chunks[2]);
-            query.Criteria.AddCondition("publickeytoken", ConditionOperator.Equal, chunks[3]);
+            query.Criteria.AddCondition("name", ConditionOperator.Equal, assemblyName.Name);
+
+            // Match versions that begin with Major.Minor. (e.g. "1.2." -> "1.2.0.0" or "1.2.3.4"),
+            // or equal to "1.2" just in case.
+            var versionFilter = new FilterExpression(LogicalOperator.Or);
+            versionFilter.AddCondition("version", ConditionOperator.BeginsWith, versionPrefix);
+            versionFilter.AddCondition("version", ConditionOperator.Equal, majorMinor);
+            query.Criteria.AddFilter(versionFilter);
+
             return Service.RetrieveMultiple(query).Entities.FirstOrDefault()?.Id ?? Guid.Empty;
         }
 
@@ -143,7 +155,7 @@ namespace XrmToolBox.AutoDeployer
             {
                 try
                 {
-                    using (var stream = System.IO.File.Open(e.FullPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+                    using (var stream = System.IO.File.Open(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
                         if (stream != null)
                         {
